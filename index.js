@@ -1,204 +1,199 @@
 /*!
  * extglob <https://github.com/jonschlinkert/extglob>
  *
- * Copyright (c) 2015 Jon Schlinkert, contributors.
+ * Copyright (c) 2014-2015, Jon Schlinkert.
  * Licensed under the MIT license.
  */
 
 'use strict';
 
-module.exports = extglob;
+/**
+ * Module dependencies
+ */
 
-function extglob(str) {
+var mm = require('micromatch');
+
+/**
+ * Expose `extglob`
+ */
+
+module.exports = function (str) {
+  if (typeof str !== 'string') {
+    throw new Error('extglob expects a string');
+  }
+  if (!/[@?!+*]\(/.test(str)) {
+    return str;
+  }
+  return extglob(str);
+};
+
+module.exports.match = function (arr, pattern) {
+  var re = new RegExp(expand(pattern));
+  var len = arr.length, i = 0;
+  var res = [];
+
+  while (len--) {
+    var str = arr[i++];
+    if (re.test(str)) {
+      res.push(str);
+    }
+  }
+  return res
+};
+
+module.exports.makeRe = function (pattern) {
+ return new RegExp(expand(pattern));
+};
+
+function expand(str) {
+  str = mm.expand(extglob(str)).glob;
+  str = str.replace(/%~/g, '?');
+  return str.replace(/%%/g, '*');
+}
+
+
+/**
+ * Expand `{foo,bar}` or `{1..5}` extglob in the
+ * given `string`.
+ *
+ * @param  {String} `str`
+ * @param  {Array} `arr`
+ * @param  {Object} `options`
+ * @return {Array}
+ */
+
+function extglob(str, wrapped) {
+  var last = false;
+  var wrap = true;
+  var res = '';
+
   if (!(extGlobRe instanceof RegExp)) {
     extGlobRe = extGlobRegex();
   }
 
-  var matches = str.match(extGlobRe) || [];
-  console.log(matches)
-  var m = matches[0];
-
-  switch(m) {
-    case '$':
-      return ''
-    case '\\':
-      return ''
-    case '@':
-      return ''
-    case '!':
-      return ''
-    case '*':
-      return ''
-    case '+':
-      return ''
-    case '?':
-      return ''
-
+  var matches = extGlobRe.exec(str);
+  if (matches) {
+    var ch = matches[1];
+    var inner = matches[3];
+    var parts = str.split(matches[0]);
+    if (parts[0] === '' && parts[1] === '*') {
+      return '(?:(?!^' + unescape(inner) + ').)%%$';
+    }
+    str = parts.join(wrapper(inner, ch));
   }
-  return m;
-};
+
+  if (last === false && /[!$@*+]\(/.test(str)) {
+    str = extglob(str, true);
+  } else {
+    last = true;
+    str = unescape('_LP_!\\._RP__LP_=._RP_' + str);
+  }
+
+  return last ? '^(?:' + str + ')$' : str;
+}
+
+/**
+ * regex cache
+ */
 
 var extGlobRe;
 
+/**
+ * wrap the string
+ */
+
+function wrapper(str, ch) {
+  var res = str;
+  if (!ch) {
+    return '_LP_!\\._RP__LP_=._RP_' + res;
+  }
+
+  if (ch === '!') {
+    res = '_LP_:_LP_!' + str + '_RP_[^/]%%%~_RP_';
+
+  } else if (ch === '@') {
+    res = '_LP_:' + str + '_RP_';
+
+  } else if (ch === '+') {
+    res = '_LP_:' + str + '_RP_+';
+
+  } else if (ch === '*') {
+    res = '_LP_:' + str + '_RP_%%';
+
+  } else if (ch === '?') {
+    res = '_LP_:' + str + '_RP_%~';
+  }
+  return res;
+}
+
+/**
+ * unescape parens
+ */
+
+function unescape(str) {
+  str = str.split('_LP_').join('(?');
+  str = str.split('_RP_').join(')');
+  return str;
+}
+
+/**
+ * extglob regex.
+ */
+
 function extGlobRegex() {
-  if (!(extGlobRe instanceof RegExp)) {
-    extGlobRe = /([^?*+@!]*)([?*+@!]{1})(\(([^)]+)\))/g;
-  }
-  // return /([?*+@!]{1})(\(([^)]+)\))/g;
-  // return /([^?*+@!]*)([?*+@!]{1})(\(([^)]+)\))/g;
-  return extGlobRe;
+  return /(\\?[@?!+*$]\\?)(\(([^()]+)\))/;
 }
 
-
-
-
-function extglob2(glob, type) {
-  console.log('before:', glob)
-  var re = /([^?*+@!]*)(\.)?([?*+@!]{1})(\(([^)]+)\))/;
-  var match = re.exec(glob);
-
-  if (match) {
-    var prefix = match[2];
-    var inner = match[4];
-    if (inner.indexOf('{') !== -1) {
-      return glob;
-    }
-
-    // inner = esc(inner.replace(/\*/g, '.*'));
-    console.log(match)
-    // var res = esc('[^/]*?');
-    var res = '';
-    switch(prefix) {
-      case '?':
-        res += esc('(?:' + inner + ')?');
-        break;
-      case '*':
-      case '+':
-        res += esc('(?:') + inner + ')';
-        break;
-      case '!':
-        // res += esc('(?:' + inner + ')?')
-        res += esc('((?!') + inner + esc(').*?)');
-        break;
-      case '@':
-        break;
-      default:
-        return glob;
-        break;
-    }
-    glob = glob.replace(match[0], res);
-
-    console.log('after:', unesc(glob));
-    return glob;
-    // glob = glob.replace(match[0], '(' + inner + ')' + prefix);
-
-  }
-
-  return glob.replace(/(\.)?([?*+@!]{1})(\(([^)]+)\))/, function (match, $1, prefix, $3, $4) {
-    // console.log('args:', [].slice.call(arguments))
-    if (!prefix || !$3 || !$4 || $4.indexOf('{') !== -1) {
-      return match;
-    }
-    var res;
-
-    if (prefix === '?') { res = '(?:' + $4 + ')?'; }
-
-    if (prefix === '*' || prefix === '+') {
-      res = esc('(?:') + $4 + ')';
-    }
-
-    if (prefix === '!') {
-      res = esc('((?!') + $4 + esc(').*?)');
-    }
-        console.log('after:', unesc(res));
-
-    return res || match;
-  });
-}
-
-// if (matches.indexOf('!(') !== -1 || matches.indexOf('?(') !== -1) {
-//   res.push({
-//     re: /([^*!?.\/]*?)(\!\(([^)]*)\))/g,
-//     str: function (token, $1, $2, $3) {
-//       // /^(?:(?=.)a[^/]*?(?:(?!x)[^/]*?))$/
-//       // /^(?:a(?!\.)(?=.)[^\/]*?(?!x)[^\/]*?)$/
-// console.log(arguments)
-//       // return '(_QMARK_=.)' + $1 + '[^/]_SQ_(_QMARK_!' + $2 + ')_SQ_';
-//       var len = $3.length;
-//       if (len === 1) {
-//         return token.replace($2, '[^' + $3 + ']');
-//       }
-//       return token.replace($2, '(_QMARK_!' + $3 + ')[^/]_SQ_');
-//     }
-//   });
-// }
-
-function parseGlob(str) {
-  if (!(extGlobRe instanceof RegExp)) {
-    extGlobRe = extGlobRegex();
-  }
-
-  var m = str.match(extGlobRe) || [];
-  var before = m[1];
-  var dot = null;
-
-  if (before.slice(-1) === '.') {
-    before = before.slice(0, m[1].length - 1);
-    dot = '.';
-  }
-
-  return {
-    match: m[0],
-    before: before,
-    dot: dot,
-    prefix: m[2],
-    outter: m[3],
-    inner: m[4]
-  }
-}
-
-// console.log(parseGlob('a/b/c/!(d|e)/f'))
-// console.log(parseGlob('a/b/c/.!(d|e)/f'))
-
-function interpolate(template, data) {
-  if (arguments.length < 2) {
-    return interpolate.bind(null, template);
-  }
-
-  var matches = [];
-
-  template.replace(extGlobRegex(),
-    function (_, before, pre, out, inner, idx) {
-      matches.push({
-        orig: template,
-        match: _,
-        before: before,
-        pre: pre,
-        out: out,
-        inner: inner,
-        idx: idx
-      })
-      // var foo;
-      // if (inner && data) {
-      //   return _.replace(pre, data[pre]);
-      // }
-      // return _;
-    });
-    return matches;
-}
-
-var ch = {
-  '?': '__QM__',
-  '*': '__ST__',
-  '+': '__PL__',
-  '!': '__EX__',
-  '@': '__AT__',
+var CHAR_DEBUG = {
+  '\\?': '__ESC_QMARK__',
+  '?': 'ZERO_OR_ONE',
+  '*': 'ZERO_OR_MORE',
+  '+': 'ONE_OR_MORE',
+  '@': 'ONE',
+  '!': 'ANY_EXCEPT'
 };
 
-var res = interpolate('a/b/c/!(d|e)/?(f|g)/h', ch)
-console.log(res)
+var CHAR_CLASS = {
+  alnum: /[a-zA-Z0-9]/,
+  alpha: /[a-zA-Z]/,
+  blank: /[ \t]/,
+  cntrl: /[\x00-\x1F\x7F]/,
+  digit: /[0-9]/,
+  graph: /[\x21-\x7E]/,
+  lower: /[a-z]/,
+  print: /[\x20-\x7E]/,
+  punct: /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/,
+  space: /[ \t\r\n\v\f]/,
+  upper: /[A-Z]/,
+  xdigit: /[A-Fa-f0-9]/
+};
 
-function parseEach (str) {
+/**
+ * Faster alternative to `String.replace()` when the
+ * index of the token to be replaces can't be supplied
+ */
 
+function splice(str, i, token, replacement) {
+  return str.slice(0, i - token.length - 1) + replacement
+    + str.slice(i + token.length);
+}
 
+/**
+ * Faster array map
+ */
+
+function map(arr, fn) {
+  if (arr == null) {
+    return [];
+  }
+
+  var len = arr.length;
+  var res = [];
+  var i = -1;
+
+  while (++i < len) {
+    res[i] = fn(arr[i], i);
+  }
+
+  return res;
 }
