@@ -1,7 +1,0 @@
-[31m  1 failing[0m
-
-[0m  1) extglob1a should match character classes::
-[0m[31m     Maximum call stack size exceeded[0m[90m
-  
-[0m
-

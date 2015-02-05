@@ -1,3 +1,4 @@
+*.DS_store
 *.sublime-*
 _gh_pages
 actual
