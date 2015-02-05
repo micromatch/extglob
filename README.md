@@ -1,6 +1,6 @@
 # extglob [![NPM version](https://badge.fury.io/js/extglob.svg)](http://badge.fury.io/js/extglob)
 
-> Extended globs. extglobs add the expressive power of regular expressions to glob patterns.
+> Extended globs. Add (almost) the expressive power of regular expressions to glob patterns.
 
 ## Install with [npm](npmjs.org)
 
