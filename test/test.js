@@ -25,17 +25,21 @@ describe('extglobs', function () {
     extglob.match(['c/z/v','c/a/v'], 'c/@(z)/v').should.eql(['c/z/v']);
     extglob.match(['c/z/v','c/a/v'], 'c/+(z)/v').should.eql(['c/z/v']);
     extglob.match(['c/z/v','c/a/v'], 'c/*(z)/v').should.eql(['c/z/v']);
-    extglob.match(['c/z/v','z','zf','fz'], '?(z)').should.eql(['z'])
-    extglob.match(['c/z/v','z','zf','fz'], '+(z)').should.eql(['z'])
-    extglob.match(['c/z/v','z','zf','fz'], '*(z)').should.eql(['z'])
-    extglob.match(['cz','abz','az'], 'a@(z)').should.eql(['az'])
-    extglob.match(['cz','abz','az'], 'a*@(z)').should.eql(['abz', 'az'])
-    extglob.match(['cz','abz','az'], 'a!(z)').should.eql(['abz'])
-    extglob.match(['cz','abz','az'], 'a?(z)').should.eql(['az'])
-    extglob.match(['cz','abz','az'], 'a+(z)').should.eql(['az'])
-    extglob.match(['cz','abz','az'], 'a*(z)').should.eql(['az'])
-    extglob.match(['cz','abz','az'], 'a**(z)').should.eql(['abz', 'az'])
-    extglob.match(['cz','abz','az'], 'a*!(z)').should.eql(['abz', 'az'])
+    extglob.match(['c/z/v','z','zf','fz'], '?(z)').should.eql(['z']);
+    extglob.match(['c/z/v','z','zf','fz'], '+(z)').should.eql(['z']);
+    extglob.match(['c/z/v','z','zf','fz'], '*(z)').should.eql(['z']);
+    extglob.match(['cz','abz','az'], 'a@(z)').should.eql(['az']);
+    extglob.match(['cz','abz','az'], 'a*@(z)').should.eql(['abz', 'az']);
+    extglob.match(['cz','abz','az'], 'a!(z)').should.eql(['abz']);
+    extglob.match(['cz','abz','az'], 'a?(z)').should.eql(['az']);
+    extglob.match(['cz','abz','az'], 'a+(z)').should.eql(['az']);
+    extglob.match(['cz','abz','az'], 'a*(z)').should.eql(['az']);
+    extglob.match(['cz','abz','az'], 'a**(z)').should.eql(['abz', 'az']);
+    extglob.match(['cz','abz','az'], 'a*!(z)').should.eql(['abz', 'az']);
+  });
+
+  it('should match extglobs in file paths:', function () {
+    extglob.match(['a.js', 'a.md', 'a.js.js', 'c.js', 'a.', 'd.js.d'], '*.!(js)').should.eql(['a.md', 'a.', 'd.js.d'])
   });
 });
 

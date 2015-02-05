@@ -1,6 +1,6 @@
 {
   "name": "extglob",
-  "description": "Extended globs. Add the expressive power of regular expressions to glob patterns.",
+  "description": "Extended globs. extglobs add the expressive power of regular expressions to glob patterns.",
   "version": "0.1.0",
   "homepage": "https://github.com/jonschlinkert/extglob",
   "author": {
