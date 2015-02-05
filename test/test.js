@@ -10,16 +10,14 @@
 var path = require('path');
 var should = require('should');
 var argv = require('minimist')(process.argv.slice(2));
-var extglob = require('./match');
+var extglob = require('..');
 
 if ('mm' in argv) {
   extglob = require('minimatch');
 }
 
-describe('extglob1a', function () {
-  // extglob.makeRe('*(z)').should.eql(/^(?:(?!\.)(?=.)(?:z)*)$/);
-
-  it('should match character classes:', function () {
+describe('extglobs', function () {
+  it('should match extended globs:', function () {
     extglob.match(['a/z', 'a/b'], 'a/!(z)').should.eql(['a/b']);
     extglob.match(['c/z/v'], 'c/z/v').should.eql(['c/z/v']);
     extglob.match(['c/a/v'], 'c/!(z)/v').should.eql(['c/a/v']);
@@ -42,7 +40,7 @@ describe('extglob1a', function () {
 });
 
 describe('bash', function () {
-  it('should match extended globs:', function () {
+  it('should match extended globs from the bash spec:', function () {
     extglob.match(['fofo'], '*(f*(o))').should.eql(['fofo']);
     extglob.match(['ffo'], '*(f*(o))').should.eql(['ffo']);
     extglob.match(['foooofo'], '*(f*(o))').should.eql(['foooofo']);
