@@ -20,7 +20,7 @@ if ('mm' in argv) {
 }
 
 function makeRe(glob) {
-  var str = extglob(glob, true);
+  var str = extglob(glob, {escape: true});
   if (mm.minimatch) {
     glob = glob.split('%%').join('*');
     glob = glob.split('%~').join('?');
