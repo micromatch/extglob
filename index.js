@@ -45,8 +45,8 @@ function extglob(str, opts) {
   // create a unique key for caching by
   // combining the string and options
   var key = str
+    + !!opts.regex
     + !!opts.contains
-    + !!opts.negate
     + !!opts.escape;
 
   if (cache.hasOwnProperty(key)) {
@@ -57,13 +57,21 @@ function extglob(str, opts) {
     re = regex();
   }
 
+  var negate = false;
+
   while (isExtglob(str)) {
     var match = re.exec(str);
     if (!match) break;
+    var prefix = match[1];
 
     var id = '__EXTGLOB_' + (i++) + '__';
-    o[id] = wrap(match[3], match[1], opts.escape);
+    o[id] = wrap(match[3], prefix, opts.escape);
     str = str.split(match[0]).join(id);
+
+    // use the prefix of the _last_ (outtermost) pattern
+    if (prefix === '!') {
+      negate = true;
+    }
   }
 
   var keys = Object.keys(o);
@@ -78,7 +86,7 @@ function extglob(str, opts) {
   }
 
   var result = opts.regex
-    ? toRegex(str, opts.contains, opts.negate)
+    ? toRegex(str, opts.contains, negate)
     : str;
 
   // cache the result and return it
@@ -95,7 +103,6 @@ function extglob(str, opts) {
  */
 
 function wrap(str, prefix, esc) {
-  if (esc !== false) esc = true;
   switch (prefix) {
     case '!':
       return '(?!' + str + ')[^/]' + (esc ? '%%%~' : '*?');
@@ -135,7 +142,7 @@ function toRegex(pattern, contains, negate) {
   var after = contains ? '$' : '';
   pattern = ('(?:' + pattern + ')' + after);
   if (negate) {
-    return prefix + ('(?!^' + pattern + ').*$');
+    pattern = prefix + ('(?!^' + pattern + ').*$');
   }
   return new RegExp(prefix + pattern);
 }
