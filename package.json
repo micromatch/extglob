@@ -1,7 +1,7 @@
 {
   "name": "extglob",
   "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "homepage": "https://github.com/jonschlinkert/extglob",
   "author": {
     "name": "Jon Schlinkert",
