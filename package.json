@@ -1,6 +1,6 @@
 {
   "name": "extglob",
-  "description": "Extended globs. Add (almost) the expressive power of regular expressions to glob patterns.",
+  "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
   "version": "0.2.0",
   "homepage": "https://github.com/jonschlinkert/extglob",
   "author": {
@@ -18,17 +18,22 @@
     "type": "MIT",
     "url": "https://github.com/jonschlinkert/extglob/blob/master/LICENSE"
   },
+  "files": [
+    "index.js",
+    "lib/"
+  ],
   "main": "index.js",
   "engines": {
     "node": ">=0.10.0"
   },
-  "files": [
-    "index.js"
-  ],
   "scripts": {
     "test": "mocha"
   },
+  "dependencies": {
+    "is-extglob": "^1.0.0"
+  },
   "devDependencies": {
+    "micromatch": "^2.1.6",
     "minimatch": "^2.0.1",
     "minimist": "^1.1.0",
     "mocha": "*",
@@ -42,8 +47,5 @@
     "ksh",
     "match",
     "wildcard"
-  ],
-  "dependencies": {
-    "micromatch": "^1.2.2"
-  }
+  ]
 }
