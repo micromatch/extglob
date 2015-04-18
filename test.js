@@ -12,7 +12,7 @@ require('should');
 var path = require('path');
 var argv = require('minimist')(process.argv.slice(2));
 var mm = require('micromatch');
-var extglob = require('./extglob');
+var extglob = require('./');
 
 if ('mm' in argv) {
   mm = require('minimatch');
