@@ -1,8 +1,8 @@
 /*!
  * extglob <https://github.com/jonschlinkert/extglob>
  *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT license.
+ * Copyright (c) 2015, Jon Schlinkert.
+ * Licensed under the MIT License.
  */
 
 'use strict';
@@ -17,14 +17,14 @@ var mm = require('micromatch');
  * Expose `extglob`
  */
 
-module.exports = function (str) {
+module.exports = function (str, options) {
   if (typeof str !== 'string') {
     throw new Error('extglob expects a string');
   }
   if (!isExtglob(str)) {
     return str;
   }
-  return extglob(str);
+  return extglob(str, options);
 };
 
 module.exports.match = function (arr, pattern) {
@@ -72,7 +72,7 @@ function extglob(str) {
     var inner = matches[3];
     var parts = str.split(matches[0]);
     if (parts[0] === '' && parts[1] === '*') {
-      return '(?:(?!^' + unescape(inner) + ').)_STAR_$';
+      return '(?:(?!^' + unescape(inner) + ').)%%$';
     }
     str = parts.join(wrapper(inner, ch));
   }
@@ -84,8 +84,7 @@ function extglob(str) {
     last = true;
     str = unescape(wrapper(str, null));
   }
-
-  return last ? '^(?:' + str + ')$' : str;
+  return str;
 }
 
 /**
@@ -101,17 +100,17 @@ var extGlobRe;
 function wrapper(str, ch) {
   switch(ch) {
     case null:
-      return '_LP_!\\._RP__LP_=._RP_' + str;
+      return str;
     case '!':
-      return '_LP_:_LP_!' + str + '_RP_[^/]_STAR__QUES__RP_';
+      return '_LP_:_LP_!' + str + '_RP_[^/]%%%~_RP_';
     case '@':
       return '_LP_:' + str + '_RP_';
     case '+':
       return '_LP_:' + str + '_RP_+';
     case '*':
-      return '_LP_:' + str + '_RP__STAR_';
+      return '_LP_:' + str + '_RP_%%';
     case '?':
-      return '_LP_:' + str + '_RP__QUES_';
+      return '_LP_:' + str + '_RP_%~';
   }
   return str;
 }
@@ -131,8 +130,8 @@ function unescape(str) {
  */
 
 function unescapeChars(str) {
-  str = str.split('_QUES_').join('?');
-  str = str.split('_STAR_').join('*');
+  str = str.split('%~').join('?');
+  str = str.split('%%').join('*');
   return str;
 }
 
