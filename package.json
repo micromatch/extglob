@@ -26,16 +26,16 @@
     "test": "mocha"
   },
   "dependencies": {
-    "ansi-green": "^0.1.1",
-    "is-extglob": "^1.0.0",
-    "success-symbol": "^0.1.0"
+    "is-extglob": "^1.0.0"
   },
   "devDependencies": {
+    "ansi-green": "^0.1.1",
     "micromatch": "^2.1.6",
     "minimatch": "^2.0.1",
     "minimist": "^1.1.0",
     "mocha": "*",
-    "should": "*"
+    "should": "*",
+    "success-symbol": "^0.1.0"
   },
   "keywords": [
     "bash",
