@@ -11,7 +11,6 @@
  * Module dependencies
  */
 
-var isExtglob = require('is-extglob');
 var re, cache = {};
 
 /**

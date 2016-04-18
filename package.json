@@ -25,9 +25,7 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
-    "is-extglob": "^1.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "ansi-green": "^0.1.1",
     "micromatch": "^2.1.6",
