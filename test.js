@@ -7,166 +7,327 @@
 
 'use strict';
 
-/* deps:mocha */
+require('mocha');
 require('should');
-var path = require('path');
-var success = require('success-symbol');
-var green = require('ansi-green');
+var assert = require('assert');
 var argv = require('minimist')(process.argv.slice(2));
-var mm = require('micromatch');
 var extglob = require('./');
+var isMatch = extglob.isMatch;
+var idx = 0;
+var mm;
 
-if ('mm' in argv) {
-  mm = require('minimatch');
-  mm.minimatch = true;
+function match(arr, pattern, expected, msg) {
+  if ('mm' in argv) {
+    mm = require('minimatch');
+    pattern = mm.makeRe(pattern);
+  }
+  var res = extglob.match(arr, pattern);
+  assert.deepEqual(res.sort(), expected.sort(), msg);
+  return res;
 }
 
-function makeRe(glob) {
-  var str = extglob(glob, {escape: true});
-  if (mm.minimatch) {
-    glob = glob.split('%%').join('*');
-    glob = glob.split('%~').join('?');
-    str = glob;
-  }
-  return mm.makeRe(str);
-}
-
-function match(arr, pattern, expected) {
-  var re = makeRe(pattern);
-  var res = [], len = arr.length;
-  while (len--) {
-    var ele = arr[len];
-    if (re.test(ele)) {
-      res.push(ele);
-    }
-  }
-  if (res.length) {
-    console.log('    ' + green('✓'), pattern);
-  }
-  var actual = res.sort();
-  return actual.should.eql(expected.sort());
-}
-
-describe('extglobs', function () {
-  it('should match extended globs:', function () {
+describe('extglobs', function() {
+  it('should match extended globs:', function() {
     match(['a/z', 'a/b'], 'a/!(z)', ['a/b']);
     match(['c/z/v'], 'c/z/v', ['c/z/v']);
     match(['c/a/v'], 'c/!(z)/v', ['c/a/v']);
-    match(['c/z/v','c/a/v'], 'c/!(z)/v', ['c/a/v']);
-    match(['c/z/v','c/a/v'], 'c/@(z)/v', ['c/z/v']);
-    match(['c/z/v','c/a/v'], 'c/+(z)/v', ['c/z/v']);
-    match(['c/z/v','c/a/v'], 'c/*(z)/v', ['c/z/v']);
-    match(['c/z/v','z','zf','fz'], '?(z)', ['z']);
-    match(['c/z/v','z','zf','fz'], '+(z)', ['z']);
-    match(['c/z/v','z','zf','fz'], '*(z)', ['z']);
-    match(['cz','abz','az'], 'a@(z)', ['az']);
-    match(['cz','abz','az'], 'a*@(z)', ['az', 'abz']);
-    match(['cz','abz','az'], 'a!(z)', ['abz']);
-    match(['cz','abz','az'], 'a?(z)', ['az']);
-    match(['cz','abz','az'], 'a+(z)', ['az']);
-    match(['az','bz','axz'], 'a+(z)', ['az']);
-    match(['cz','abz','az'], 'a*(z)', ['az']);
-    match(['cz','abz','az'], 'a**(z)', ['az', 'abz']);
-    match(['cz','abz','az'], 'a*!(z)', ['az', 'abz']);
+    match(['c/z/v', 'c/a/v'], 'c/!(z)/v', ['c/a/v']);
+    match(['c/z/v', 'c/a/v'], 'c/@(z)/v', ['c/z/v']);
+    match(['c/z/v', 'c/a/v'], 'c/+(z)/v', ['c/z/v']);
+    match(['c/z/v', 'c/a/v'], 'c/*(z)/v', ['c/z/v']);
+    match(['c/z/v', 'z', 'zf', 'fz'], '?(z)', ['z']);
+    match(['c/z/v', 'z', 'zf', 'fz'], '+(z)', ['z']);
+    match(['c/z/v', 'z', 'zf', 'fz'], '*(z)', ['z']);
+    match(['cz', 'abz', 'az'], 'a@(z)', ['az']);
+    match(['cz', 'abz', 'az'], 'a*@(z)', ['az', 'abz']);
+    match(['cz', 'abz', 'az'], 'a!(z)', ['abz']);
+    match(['cz', 'abz', 'az'], 'a?(z)', ['az']);
+    match(['cz', 'abz', 'az'], 'a+(z)', ['az']);
+    match(['az', 'bz', 'axz'], 'a+(z)', ['az']);
+    match(['cz', 'abz', 'az'], 'a*(z)', ['az']);
+    match(['cz', 'abz', 'az'], 'a**(z)', ['az', 'abz']);
+    match(['cz', 'abz', 'az'], 'a*!(z)', ['az', 'abz']);
   });
 
-  it('should match extglobs in file paths:', function () {
+  it('should match extglobs in file paths:', function() {
     match(['a.js', 'a.md', 'a.js.js', 'c.js', 'a.', 'd.js.d'], '*.!(js)', ['d.js.d', 'a.', 'a.md']);
     match(['a.js', 'a.md', 'a.js.js', 'c.js', 'a.', 'd.js.d'], '*!(.js)', ['d.js.d', 'a.', 'a.md']);
+    match(['a.js', 'a.md', 'a.js.js', 'c.js', 'a.', 'd.js.d'], '!(*.js)', ['d.js.d', 'a.', 'a.md']);
   });
 
-  it('should support exclusion patterns:', function () {
+  it('should support exclusion patterns:', function() {
     var arr = ['a.a', 'a.b', 'a.a.a', 'c.a', 'a.', 'd.a.d'];
     match(arr, '*.+(b|d)', ['d.a.d', 'a.b']);
     match(arr, '*.!(a)', ['d.a.d', 'a.', 'a.b']);
     match(arr, '*.!(*a)', ['d.a.d', 'a.', 'a.b']);
   });
 
-  it('should match exactly one of the given pattern:', function () {
+  it('should match exactly one of the given pattern:', function() {
     var arr = ['aa.aa', 'a.bb', 'a.aa.a', 'cc.a', 'a.a', 'c.a', 'dd.aa.d', 'b.a'];
-    match(arr, '@(b|a)\.@(a)', ['a.a', 'b.a']);
+    match(arr, '(b|a)\\.(a)', ['a.a', 'b.a']);
+    match(arr, '@(b|a)\\.@(a)', ['a.a', 'b.a']);
   });
 
-  it.skip('should support multiple exclusion patterns in one extglob:', function () {
+  it('should work with globs', function() {
+    var arr = ['123abc', 'ab', 'abcdef', 'abcfefg', 'abef', 'abcfef', 'abd', 'acd'];
+    match(arr, 'ab*(e|f)', ['ab', 'abef']);
+    match(arr, 'ab?*(e|f)', ['ab', 'abef']);
+    match(arr, 'ab*d+(e|f)', ['abcdef']);
+    match(arr, 'ab**(e|f)', ['ab', 'abcdef', 'abcfefg', 'abcfef', 'abef', 'abd']);
+    match(arr, 'ab*+(e|f)', ['abcdef', 'abcfef', 'abef']);
+    match(arr, 'ab**(e|f)g', ['abcfefg']);
+    match(arr, 'ab***ef', ['abcdef', 'abcfef', 'abef']);
+    match(arr, 'ab**', ['ab', 'abcdef', 'abcfef', 'abcfefg', 'abd', 'abef']);
+    match(arr, '*?(a)bc', ['123abc']);
+    match(arr, 'a(b*(foo|bar))d', ['abd']);
+    match(arr, '(a+|b)+', ['ab', 'abcdef', 'abcfefg', 'abef', 'abcfef', 'abd', 'acd']);
+    match(arr, '(a+|b)*', ['ab', 'abcdef', 'abcfefg', 'abef', 'abcfef', 'abd', 'acd']);
+    match(['/dev/udp/129.22.8.102/45'], '/dev\\/@(tcp|udp)\\/*\\/*', ['/dev/udp/129.22.8.102/45']);
+    match(['12', '1', '12abc'], '0|[1-9]*([0-9])', ['1', '12'], 'Should match valid numbers');
+    match(['07', '0377', '09'], '+([0-7])', ['0377', '07'], 'Should match octal numbers');
+  });
+
+  it('stuff from korn\'s book', function() {
+    assert(isMatch('paragraph', 'para@(chute|graph)'));
+    assert(!isMatch('paramour', 'para@(chute|graph)'));
+    assert(isMatch('para991', 'para?([345]|99)1'));
+    assert(!isMatch('para381', 'para?([345]|99)1'));
+    assert(!isMatch('paragraph', 'para*([0-9])'));
+    assert(isMatch('para', 'para*([0-9])'));
+    assert(isMatch('para13829383746592', 'para*([0-9])'));
+    assert(!isMatch('paragraph', 'para*([0-9])'));
+    assert(!isMatch('para', 'para+([0-9])'));
+    assert(isMatch('para987346523', 'para+([0-9])'));
+    assert(isMatch('paragraph', 'para!(*.[0-9])'));
+    assert(isMatch('para.38', 'para!(*.[00-09])'));
+    assert(isMatch('para.graph', 'para!(*.[0-9])'));
+    assert(isMatch('para39', 'para!(*.[0-9])'));
+  });
+
+  it('tests derived from those in rosenblatt\'s korn shell book', function() {
+    match(['', '137577991', '2468'], '*(0|1|3|5|7|9)', ['', '137577991']);
+    match(['file.c', 'file.C', 'file.cc', 'file.ccc'], '*.c?(c)', ['file.c', 'file.cc']);
+
+    // extglob tests say that 'Makefile' should match on this one, but I can't see why it would.
+    match(['parse.y', 'shell.c', 'Makefile', 'Makefile.in'], '!(*.c|*.h|Makefile.in|config*|README)', ['parse.y', 'Makefile.in']);
+    match(['VMS.FILE;', 'VMS.FILE;0', 'VMS.FILE;1', 'VMS.FILE;139', 'VMS.FILE;1N'], '*\\;[1-9]*([0-9])', ['VMS.FILE;1', 'VMS.FILE;139']);
+  });
+
+  it('tests derived from the pd-ksh test suite', function() {
+    match(['abcx', 'abcz', 'bbc'], '!([[*])*', ['abcx', 'abcz', 'bbc']);
+    match(['abcx', 'abcz', 'bbc'], '[a*(]*z', ['abcz']);
+    match(['abcx', 'abcz', 'bbc'], '+(a|b\\[)*', ['abcx', 'abcz']);
+    match(['abd', 'acd'], 'a+(b|c)d', ['abd', 'acd']);
+    match(['abd', 'acd'], 'a!(@(b|B))d', ['acd']);
+    match(['abd', 'acd'], 'a[b*(foo|bar)]d', ['abd']);
+  });
+
+  it('simple kleene star tests', function() {
+    assert(!isMatch('foo', '*(a|b\\[)'));
+    assert(isMatch('foo', '*(a|b\\[)|f*'));
+  });
+
+  it.skip('this doesn\'t work in bash either (per bash extglob.tests notes)', function() {
+    assert(isMatch('*(a|b[)', '*(a|b\\[)'));
+  });
+
+  it('should support multiple exclusion patterns in one extglob:', function() {
     var arr = ['a.a', 'a.b', 'a.c.d', 'c.c', 'a.', 'd.d', 'e.e', 'f.f'];
     match(arr, '!(*.a|*.b|*.c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f']);
+    match(arr, '*!(.a|.b|.c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f']);
+    match(arr, '*.!(a|b|c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f']);
+  });
+
+  it('should correctly match empty parens', function() {
+    var arr = ['def', 'ef'];
+    match(arr, '()ef', ['def', 'ef']);
+  });
+
+  it('should match escaped parens', function() {
+    var arr = ['a(b', 'a((b', 'a((((b', 'ab'];
+    match(arr, 'a\\(b', ['a(b']);
+    match(arr, 'a\\(*b', ['ab', 'a(b', 'a((b', 'a((((b']);
+  });
+
+  it('should match escaped backslashes', function() {
+    var arr = ['a\\b', 'a/b', 'ab'];
+    match(arr, 'a\\\\b', ['a\\b']);
+  });
+
+  it('should match escaped slashes', function() {
+    var arr = ['a\\b', 'a/b', 'ab'];
+    match(arr, 'a/b', ['a/b']);
+  });
+
+  it('should match common regex patterns', function() {
+    var arr = ['a c', 'a1c', 'a123c', 'a.c', 'a.xy.zc', 'a.zc', 'abbbbc', 'abbbc', 'abbc', 'abc', 'abq', 'axy zc', 'axy', 'axy.zc', 'axyzc'];
+
+    match(arr, 'ab*c', ['abbbbc', 'abbbc', 'abbc', 'abc']);
+    match(arr, 'ab+bc', ['abbbbc', 'abbbc', 'abbc']);
+    match(arr, 'ab?bc', ['abbc', 'abc']);
+    match(arr, '^abc$', ['abc']);
+    match(arr, 'a.c', ['a.c']);
+    match(arr, 'a.*c', ['a.c', 'a.xy.zc', 'a.zc']);
+    match(arr, 'a*c', ['a c', 'a.c', 'a1c', 'a123c', 'abbbbc', 'abbbc', 'abbc', 'abc', 'axyzc', 'axy zc', 'axy.zc', 'a.xy.zc', 'a.zc']);
+    match(arr, 'a\\w+c', ['a1c', 'a123c', 'abbbbc', 'abbbc', 'abbc', 'abc', 'axyzc'], 'Should match word characters');
+    match(arr, 'a[a-z]+c', ['abbbbc', 'abbbc', 'abbc', 'abc', 'axyzc'], 'Should match word characters');
+    match(arr, 'a\\W+c', ['a.c', 'a c'], 'Should match non-word characters');
+    match(arr, 'a\\d+c', ['a1c', 'a123c'], 'Should match numbers');
+    match(['foo@#$%123ASD #$$%^&', 'foo!@#$asdfl;', '123'], '\\d+', ['123']);
+    match(['a123c', 'abbbc'], 'a\\D+c', ['abbbc'], 'Should match non-numbers');
+    match(['foo', ' foo '], '(f|o)+\\b', ['foo'], 'Should match word boundaries');
+    match(['abc', 'abd'], 'a[bc]d', ['abd'], 'Should match character classes');
+    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[b-d]e', ['ace'], 'Should match character class alphabetical ranges');
+    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[b-d]', ['ac'], 'Should match character class alphabetical ranges');
+    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[-c]', ['a-', 'ac'], 'Should match character classes with leading dashes');
+    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[c-]', ['a-', 'ac'], 'Should match character classes with trailing dashes');
+    match(['a]c', 'abd', 'ace', 'ac', 'a-'], 'a[]]c', ['a]c'], 'Should match bracket literals in character classes');
+    match(['a]', 'abd', 'ace', 'ac', 'a-'], 'a]', ['a]'], 'Should match bracket literals');
+    match(['a]', 'acd', 'aed', 'ac', 'a-'], 'a[^bc]d', ['aed'], 'Should negation patterns in character classes');
+    match(['adc', 'a-c'], 'a[^-b]c', ['adc'], 'Should match negated dashes in character classes');
+    match(['adc', 'a]c'], 'a[^]b]c', ['adc'], 'Should match negated brackets in character classes');
+    match(['01234', '0123e456', '0123e45g78'], '[\\de]+', ['01234', '0123e456', '0123e45g78'], 'Should match alpha-numeric characters in character classes');
+    match(['01234', '0123e456', '0123e45g78'], '[e\\d]+', ['01234', '0123e456', '0123e45g78'], 'Should match alpha-numeric characters in character classes');
   });
 });
 
-describe('bash', function () {
-  it('should match extended globs from the bash spec:', function () {
-    match(['fofo'], '*(f*(o))', ['fofo']);
-    match(['ffo'], '*(f*(o))', ['ffo']);
-    match(['foooofo'], '*(f*(o))', ['foooofo']);
-    match(['foooofof'], '*(f*(o))', ['foooofof']);
-    match(['fooofoofofooo'], '*(f*(o))', ['fooofoofofooo']);
-    match(['foooofof'], '*(f+(o))', []);
-    match(['xfoooofof'], '*(f*(o))', []);
-    match(['foooofofx'], '*(f*(o))', []);
-    match(['ofxoofxo'], '*(*(of*(o)x)o)', ['ofxoofxo']);
-    match(['ofooofoofofooo'], '*(f*(o))', []);
-    match(['foooxfooxfoxfooox'], '*(f*(o)x)', ['foooxfooxfoxfooox']);
-    match(['foooxfooxofoxfooox'], '*(f*(o)x)', []);
-    match(['foooxfooxfxfooox'], '*(f*(o)x)', ['foooxfooxfxfooox']);
-    match(['ofxoofxo'], '*(*(of*(o)x)o)', ['ofxoofxo']);
-    match(['ofoooxoofxo'], '*(*(of*(o)x)o)', ['ofoooxoofxo']);
-    match(['ofoooxoofxoofoooxoofxo'], '*(*(of*(o)x)o)', ['ofoooxoofxoofoooxoofxo']);
-    match(['ofoooxoofxoofoooxoofxoo'], '*(*(of*(o)x)o)', ['ofoooxoofxoofoooxoofxoo']);
-    match(['ofoooxoofxoofoooxoofxofo'], '*(*(of*(o)x)o)', []);
-    match(['ofoooxoofxoofoooxoofxooofxofxo'], '*(*(of*(o)x)o)', ['ofoooxoofxoofoooxoofxooofxofxo']);
+describe('bash', function() {
+  it('should match extended globs from the bash spec:', function() {
+    assert(isMatch('fofo', '*(f*(o))'));
+    assert(isMatch('ffo', '*(f*(o))'));
+    assert(isMatch('foooofo', '*(f*(o))'));
+    assert(isMatch('foooofof', '*(f*(o))'));
+    assert(isMatch('fooofoofofooo', '*(f*(o))'));
+    assert(!isMatch('foooofof', '*(f+(o))'));
+    assert(!isMatch('xfoooofof', '*(f*(o))'));
+    assert(!isMatch('foooofofx', '*(f*(o))'));
+    assert(isMatch('ofxoofxo', '*(*(of*(o)x)o)'));
+    assert(!isMatch('ofooofoofofooo', '*(f*(o))'));
+    assert(isMatch('foooxfooxfoxfooox', '*(f*(o)x)'));
+    assert(!isMatch('foooxfooxofoxfooox', '*(f*(o)x)'));
+    assert(isMatch('foooxfooxfxfooox', '*(f*(o)x)'));
+    assert(isMatch('ofxoofxo', '*(*(of*(o)x)o)'));
+    assert(isMatch('ofoooxoofxo', '*(*(of*(o)x)o)'));
+    assert(isMatch('ofoooxoofxoofoooxoofxo', '*(*(of*(o)x)o)'));
+    assert(isMatch('ofoooxoofxoofoooxoofxoo', '*(*(of*(o)x)o)'));
+    assert(!isMatch('ofoooxoofxoofoooxoofxofo', '*(*(of*(o)x)o)'));
+    assert(isMatch('ofoooxoofxoofoooxoofxooofxofxo', '*(*(of*(o)x)o)'));
+    assert(isMatch('aac', '*(@(a))a@(c)'));
+    assert(isMatch('ac', '*(@(a))a@(c)'));
+    assert(!isMatch('c', '*(@(a))a@(c)'));
+    assert(isMatch('aaac', '*(@(a))a@(c)'));
+    assert(!isMatch('baaac', '*(@(a))a@(c)'));
+    assert(isMatch('abcd', '?@(a|b)*@(c)d'));
+    assert(isMatch('abcd', '@(ab|a*@(b))*(c)d'));
+    assert(isMatch('acd', '@(ab|a*(b))*(c)d'));
+    assert(isMatch('abbcd', '@(ab|a*(b))*(c)d'));
+    assert(isMatch('effgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
+    assert(isMatch('efgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
+    assert(isMatch('egz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
+    assert(isMatch('egzefffgzbcdij', '*(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
+    assert(!isMatch('egz', '@(b+(c)d|e+(f)g?|?(h)i@(j|k))'));
+    assert(isMatch('ofoofo', '*(of+(o))'));
+    assert(isMatch('oxfoxoxfox', '*(oxf+(ox))'));
+    assert(!isMatch('oxfoxfox', '*(oxf+(ox))'));
+    assert(isMatch('ofoofo', '*(of+(o)|f)'));
+    assert(isMatch('foofoofo', '@(foo|f|fo)*(f|of+(o))'), 'Should match as fo+ofo+ofo');
+    assert(isMatch('oofooofo', '*(of|oof+(o))'));
+    assert(isMatch('fffooofoooooffoofffooofff', '*(*(f)*(o))'));
+    assert(isMatch('fofoofoofofoo', '*(fo|foo)'), 'Should backtrack in alternation matches');
+  });
+
+  it('should support exclusions', function() {
+    assert(!isMatch('f', '!(f)'));
+    assert(!isMatch('f', '*(!(f))'));
+    assert(!isMatch('f', '+(!(f))'));
+    assert(!isMatch('foo', '!(foo)'));
+    assert(!isMatch('mad.moo.cow', '!(*.*).!(*.*)'));
+    assert(!isMatch('mucca.pazza', 'mu!(*(c))?.pa!(*(z))?'));
+    assert(!isMatch('zoot', '@(!(z*)|*x)'));
+    assert(isMatch('foo', '!(foo)*'));
+    assert(isMatch('foo', '!(x)'));
+    assert(isMatch('foo', '!(x)*'));
+    assert(isMatch('foobar', '!(foo)*'));
+    assert(isMatch('foot', '@(!(z*)|*x)'));
+    assert(isMatch('foox', '@(!(z*)|*x)'));
+    assert(isMatch('ooo', '!(f)'));
+    assert(isMatch('ooo', '*(!(f))'));
+    assert(isMatch('ooo', '+(!(f))'));
+    assert(isMatch('zoox', '@(!(z*)|*x)'));
+    match(['aaac', 'foo'], '*(@(a))a@(c)', ['aaac']);
+    match(['aaac'], '*(@(a))a@(c)', ['aaac']);
     match(['aac'], '*(@(a))a@(c)', ['aac']);
     match(['aac'], '*(@(a))b@(c)', []);
-    match(['ac'], '*(@(a))a@(c)', ['ac']);
-    match(['c'], '*(@(a))a@(c)', []);
-    match(['aaac', 'foo'], '*(@(a))a@(c)', ['aaac']);
-    match(['baaac'], '*(@(a))a@(c)', []);
+    match(['abbcd'], '@(ab|a*(b))*(c)d', ['abbcd']);
     match(['abcd'], '?@(a|b)*@(c)d', ['abcd']);
     match(['abcd'], '@(ab|a*@(b))*(c)d', ['abcd']);
+    match(['ac'], '*(@(a))a@(c)', ['ac']);
     match(['acd'], '@(ab|a*(b))*(c)d', ['acd']);
-    match(['abbcd'], '@(ab|a*(b))*(c)d', ['abbcd']);
+    match(['baaac'], '*(@(a))a@(c)', []);
+    match(['c'], '*(@(a))a@(c)', []);
     match(['effgz'], '@(b+(c)d|e*(f)g?|?(h)i@(j|k))', ['effgz']);
     match(['efgz'], '@(b+(c)d|e*(f)g?|?(h)i@(j|k))', ['efgz']);
     match(['egz'], '@(b+(c)d|e*(f)g?|?(h)i@(j|k))', ['egz']);
-    match(['egzefffgzbcdij'], '*(b+(c)d|e*(f)g?|?(h)i@(j|k))', ['egzefffgzbcdij']);
     match(['egz'], '@(b+(c)d|e+(f)g?|?(h)i@(j|k))', []);
-    match(['ofoofo'], '*(of+(o))', ['ofoofo']);
-    match(['oxfoxoxfox'], '*(oxf+(ox))', ['oxfoxoxfox']);
-    match(['oxfoxfox'], '*(oxf+(ox))', []);
-    match(['ofoofo'], '*(of+(o)|f)', ['ofoofo']);
-    match(['foofoofo'], '@(foo|f|fo)*(f|of+(o))', ['foofoofo']);
-    match(['oofooofo'], '*(of|oof+(o))', ['oofooofo']);
-    match(['fffooofoooooffoofffooofff'], '*(*(f)*(o))', ['fffooofoooooffoofffooofff']);
-    match(['fofoofoofofoo'], '*(fo|foo)', ['fofoofoofofoo']);
-    match(['foo'], '!(x)', ['foo']);
-    match(['foo'], '!(x)*', ['foo']);
-    match(['foo', 'bar'], '!(foo)', ['bar']);
-    match(['foo', 'bar'], '!(foo)*', ['bar']);
-    match(['foo/bar'], 'foo/!(foo)', ['foo/bar']);
-    match(['foobar', 'baz'], '!(foo)*', ['baz']);
-    match(['moo.cow', 'a.b'], '!(*\\.*).!(*\\.*)', ['a.b', 'moo.cow']);
-    match(['moo.cow', 'a.b'], '!(*.*).!(*.*)', ['a.b', 'moo.cow']);
-    // match(['mad.moo.cow'], '^!(*.*).!(*.*)', []);
-    match(['mucca.pazza'], 'mu!(*(c))?.pa!(*(z))?', []);
-    match(['ooo'], '!(f)', ['ooo']);
-    match(['ooo'], '*(!(f))', ['ooo']);
-    match(['ooo'], '+(!(f))', ['ooo']);
+    match(['egzefffgzbcdij'], '*(b+(c)d|e*(f)g?|?(h)i@(j|k))', ['egzefffgzbcdij']);
     match(['f'], '!(f)', []);
     match(['f'], '*(!(f))', []);
     match(['f'], '+(!(f))', []);
-    match(['foot'], '@(!(z*)|*x)', ['foot']);
-    match(['zoot'], '@(!(z*)|*x)', []);
-    match(['foox'], '@(!(z*)|*x)', ['foox']);
-    match(['zoox'], '@(!(z*)|*x)', ['zoox']);
-    match(['foob'], '!(foo)b*', []);
-    match(['fa', 'fb', 'f', 'fo'], '!(f(o))', ['f', 'fb', 'fa']);
     match(['fa', 'fb', 'f', 'fo'], '!(f!(o))', ['fo']);
-    // match(['fff'], '!(f)', ['fff']);
-    // match(['foobb'], '!(foo)b*', ['foobb']);
-    // match(['foo'], '*(!(foo))', ['foo']);
-    // match(['foo'], '+(!(f))', ['foo']);
-    // match(['foo'], '*(!(f))', ['foo']);
-    // match(['foo'], '!(f)', ['foo']);
-    // match(['fff'], '+(!(f))', ['fff']);
-    // match(['fff'], '*(!(f))', ['fff']);
+    match(['fa', 'fb', 'f', 'fo'], '!(f(o))', ['f', 'fb', 'fa']);
+    match(['fffooofoooooffoofffooofff'], '*(*(f)*(o))', ['fffooofoooooffoofffooofff']);
+    match(['ffo'], '*(f*(o))', ['ffo']);
+    match(['fofo'], '*(f*(o))', ['fofo']);
+    match(['fofoofoofofoo'], '*(fo|foo)', ['fofoofoofofoo']);
+    match(['foo', 'bar'], '!(foo)', ['bar']);
+    match(['foo', 'bar'], '!(foo)*', ['bar', 'foo']);
+    match(['foo'], '!(foo)', []);
+    match(['foo'], '!(x)', ['foo']);
+    match(['foo'], '!(x)*', ['foo']);
+    match(['foo/bar'], 'foo/!(foo)', ['foo/bar']);
+    match(['foob'], '!(foo)b*', ['foob']);
+    match(['foobar', 'baz'], '!(foo)*', ['baz', 'foobar']);
+    match(['foofoofo'], '@(foo|f|fo)*(f|of+(o))', ['foofoofo']);
+    match(['fooofoofofooo'], '*(f*(o))', ['fooofoofofooo']);
+    match(['foooofo'], '*(f*(o))', ['foooofo']);
+    match(['foooofof'], '*(f*(o))', ['foooofof']);
+    match(['foooofof'], '*(f+(o))', []);
+    match(['foooofofx'], '*(f*(o))', []);
+    match(['foooxfooxfoxfooox'], '*(f*(o)x)', ['foooxfooxfoxfooox']);
+    match(['foooxfooxfxfooox'], '*(f*(o)x)', ['foooxfooxfxfooox']);
+    match(['foooxfooxofoxfooox'], '*(f*(o)x)', []);
+    match(['foot'], '@(!(z*)|*x)', ['foot']);
+    match(['foox'], '@(!(z*)|*x)', ['foox']);
+    match(['mad.moo.cow'], '!(*.*).!(*.*)', []);
+    match(['mucca.pazza'], 'mu!(*(c))?.pa!(*(z))?', []);
+    match(['ofoofo'], '*(of+(o))', ['ofoofo']);
+    match(['ofoofo'], '*(of+(o)|f)', ['ofoofo']);
+    match(['ofooofoofofooo'], '*(f*(o))', []);
+    match(['ofoooxoofxo'], '*(*(of*(o)x)o)', ['ofoooxoofxo']);
+    match(['ofoooxoofxoofoooxoofxo'], '*(*(of*(o)x)o)', ['ofoooxoofxoofoooxoofxo']);
+    match(['ofoooxoofxoofoooxoofxofo'], '*(*(of*(o)x)o)', []);
+    match(['ofoooxoofxoofoooxoofxoo'], '*(*(of*(o)x)o)', ['ofoooxoofxoofoooxoofxoo']);
+    match(['ofoooxoofxoofoooxoofxooofxofxo'], '*(*(of*(o)x)o)', ['ofoooxoofxoofoooxoofxooofxofxo']);
+    match(['ofxoofxo'], '*(*(of*(o)x)o)', ['ofxoofxo']);
+    match(['oofooofo'], '*(of|oof+(o))', ['oofooofo']);
+    match(['ooo'], '!(f)', ['ooo']);
+    match(['ooo'], '*(!(f))', ['ooo']);
+    match(['ooo'], '+(!(f))', ['ooo']);
+    match(['oxfoxfox'], '*(oxf+(ox))', []);
+    match(['oxfoxoxfox'], '*(oxf+(ox))', ['oxfoxoxfox']);
+    match(['xfoooofof'], '*(f*(o))', []);
+    match(['zoot'], '@(!(z*)|*x)', []);
+    match(['zoox'], '@(!(z*)|*x)', ['zoox']);
+    // assert(isMatch('foobar', '!(foo)'));
+    // assert(isMatch('moo.cow', '!(*.*).!(*.*)'));
+    // match(['fff', 'foo', 'ooo', 'f'], '*(!(f))', ['fff', 'ooo', 'foo']);
+    // assert(isMatch('fff', '+(!(f))'));
+    // assert(isMatch('fff', '*(!(f))'));
+    // assert(isMatch('foo', '*(!(f))'));
+    // assert(isMatch('fff', '!(f)'));
+    // assert(isMatch('foo', '!(f)'));
+    // assert(isMatch('foo', '+(!(f))'));
+    // assert(isMatch('foo', '*(!(foo))'));
+    // assert(!isMatch('foob', '!(foo)b*'));
   });
 });
