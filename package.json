@@ -3,14 +3,8 @@
   "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
   "version": "0.3.2",
   "homepage": "https://github.com/jonschlinkert/extglob",
-  "author": {
-    "name": "Jon Schlinkert",
-    "url": "https://github.com/jonschlinkert"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jonschlinkert/extglob.git"
-  },
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/extglob",
   "bugs": {
     "url": "https://github.com/jonschlinkert/extglob/issues"
   },
@@ -25,15 +19,15 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {},
+  "dependencies": {
+    "extend-shallow": "^2.0.1",
+    "snapdragon": "^0.4.0"
+  },
   "devDependencies": {
-    "ansi-green": "^0.1.1",
-    "micromatch": "^2.1.6",
-    "minimatch": "^2.0.1",
-    "minimist": "^1.1.0",
-    "mocha": "*",
-    "should": "*",
-    "success-symbol": "^0.1.0"
+    "minimatch": "^3.0.0",
+    "minimist": "^1.2.0",
+    "mocha": "^2.4.5",
+    "should": "^8.3.1"
   },
   "keywords": [
     "bash",
@@ -47,12 +41,27 @@
   "verb": {
     "related": {
       "list": [
-        "micromatch",
-        "expand-brackets",
         "braces",
+        "expand-brackets",
+        "expand-range",
         "fill-range",
-        "expand-range"
+        "micromatch"
       ]
-    }
+    },
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
+    },
+    "reflinks": [
+      "verb",
+      "micromatch"
+    ]
   }
 }
