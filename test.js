@@ -118,6 +118,7 @@ describe('extglobs', function() {
     match(['abcx', 'abcz', 'bbc'], '[a*(]*z', ['abcz']);
     match(['abcx', 'abcz', 'bbc'], '+(a|b\\[)*', ['abcx', 'abcz']);
     match(['abd', 'acd'], 'a+(b|c)d', ['abd', 'acd']);
+    match(['abd', 'acd', 'ac', 'ab'], 'a!(@(b|B))', ['acd', 'abd', 'ac']);
     match(['abd', 'acd'], 'a!(@(b|B))d', ['acd']);
     match(['abd', 'acd'], 'a[b*(foo|bar)]d', ['abd']);
   });
@@ -127,15 +128,18 @@ describe('extglobs', function() {
     assert(isMatch('foo', '*(a|b\\[)|f*'));
   });
 
-  it.skip('this doesn\'t work in bash either (per bash extglob.tests notes)', function() {
-    assert(isMatch('*(a|b[)', '*(a|b\\[)'));
+  it('this doesn\'t work in bash either (per bash extglob.tests notes)', function() {
+    assert(!isMatch('*(a|b[)', '*(a|b\\[)'));
+    assert(isMatch('*(a|b[)', '\\*\\(a\\|b\\[\\)'));
+    assert(isMatch('*(a|b[)', '*(a|b\\[)', {literal: true}));
   });
 
   it('should support multiple exclusion patterns in one extglob:', function() {
-    var arr = ['a.a', 'a.b', 'a.c.d', 'c.c', 'a.', 'd.d', 'e.e', 'f.f'];
-    match(arr, '!(*.a|*.b|*.c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f']);
-    match(arr, '*!(.a|.b|.c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f']);
-    match(arr, '*.!(a|b|c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f']);
+    var arr = ['a.a', 'a.b', 'a.c', 'a.c.d', 'c.c', 'a.', 'd.d', 'e.e', 'f.f', 'a.abcd'];
+    match(arr, '*.(a|b|@(ab|a*@(b))*(c)d)', ['a.a', 'a.b', 'a.abcd']);
+    match(arr, '!(*.a|*.b|*.c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f', 'a.abcd']);
+    match(arr, '*!(.a|.b|.c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f', 'a.abcd']);
+    match(arr, '*.!(a|b|c)', ['a.c.d', 'a.', 'd.d', 'e.e', 'f.f', 'a.abcd']);
   });
 
   it('should correctly match empty parens', function() {
@@ -145,8 +149,8 @@ describe('extglobs', function() {
 
   it('should match escaped parens', function() {
     var arr = ['a(b', 'a((b', 'a((((b', 'ab'];
-    match(arr, 'a\\(b', ['a(b']);
-    match(arr, 'a\\(*b', ['ab', 'a(b', 'a((b', 'a((((b']);
+    match(arr, 'a(b', ['a(b']);
+    match(arr, 'a(*b', ['ab', 'a(b', 'a((b', 'a((((b']);
   });
 
   it('should match escaped backslashes', function() {
@@ -240,14 +244,11 @@ describe('bash', function() {
     assert(!isMatch('f', '!(f)'));
     assert(!isMatch('f', '*(!(f))'));
     assert(!isMatch('f', '+(!(f))'));
-    assert(!isMatch('foo', '!(foo)'));
     assert(!isMatch('mad.moo.cow', '!(*.*).!(*.*)'));
     assert(!isMatch('mucca.pazza', 'mu!(*(c))?.pa!(*(z))?'));
     assert(!isMatch('zoot', '@(!(z*)|*x)'));
-    assert(isMatch('foo', '!(foo)*'));
     assert(isMatch('foo', '!(x)'));
     assert(isMatch('foo', '!(x)*'));
-    assert(isMatch('foobar', '!(foo)*'));
     assert(isMatch('foot', '@(!(z*)|*x)'));
     assert(isMatch('foox', '@(!(z*)|*x)'));
     assert(isMatch('ooo', '!(f)'));
@@ -279,14 +280,9 @@ describe('bash', function() {
     match(['ffo'], '*(f*(o))', ['ffo']);
     match(['fofo'], '*(f*(o))', ['fofo']);
     match(['fofoofoofofoo'], '*(fo|foo)', ['fofoofoofofoo']);
-    match(['foo', 'bar'], '!(foo)', ['bar']);
-    match(['foo', 'bar'], '!(foo)*', ['bar', 'foo']);
-    match(['foo'], '!(foo)', []);
     match(['foo'], '!(x)', ['foo']);
     match(['foo'], '!(x)*', ['foo']);
     match(['foo/bar'], 'foo/!(foo)', ['foo/bar']);
-    match(['foob'], '!(foo)b*', ['foob']);
-    match(['foobar', 'baz'], '!(foo)*', ['baz', 'foobar']);
     match(['foofoofo'], '@(foo|f|fo)*(f|of+(o))', ['foofoofo']);
     match(['fooofoofofooo'], '*(f*(o))', ['fooofoofofooo']);
     match(['foooofo'], '*(f*(o))', ['foooofo']);
@@ -318,16 +314,21 @@ describe('bash', function() {
     match(['xfoooofof'], '*(f*(o))', []);
     match(['zoot'], '@(!(z*)|*x)', []);
     match(['zoox'], '@(!(z*)|*x)', ['zoox']);
-    // assert(isMatch('foobar', '!(foo)'));
-    // assert(isMatch('moo.cow', '!(*.*).!(*.*)'));
-    // match(['fff', 'foo', 'ooo', 'f'], '*(!(f))', ['fff', 'ooo', 'foo']);
-    // assert(isMatch('fff', '+(!(f))'));
-    // assert(isMatch('fff', '*(!(f))'));
-    // assert(isMatch('foo', '*(!(f))'));
-    // assert(isMatch('fff', '!(f)'));
-    // assert(isMatch('foo', '!(f)'));
-    // assert(isMatch('foo', '+(!(f))'));
-    // assert(isMatch('foo', '*(!(foo))'));
-    // assert(!isMatch('foob', '!(foo)b*'));
+    match(['foo', 'bar'], '!(foo)', ['bar']);
+    match(['foo', 'bar', 'baz', 'foobar'], '!(foo)*', ['foo', 'bar', 'baz', 'foobar']);
+    match(['foobar'], '!(foo)', ['foobar']);
+    match(['fff', 'foo', 'ooo', 'f'], '*(!(f))', ['fff', 'ooo', 'foo']);
+    match(['fff'], '+(!(f))', ['fff']);
+    match(['fff'], '*(!(f))', ['fff']);
+    match(['foo'], '*(!(f))', ['foo']);
+    match(['fff'], '!(f)', ['fff']);
+    match(['foo'], '!(f)', ['foo']);
+    match(['foo'], '+(!(f))', ['foo']);
+    match(['foob', 'foobb'], '(foo)bb', ['foobb']);
+    match(['foo'], '!(!(foo))', ['foo']);
+    match(['foo'], '*((foo))', ['foo']);
+    // match(['foo'], '*(!(foo))', ['foo']);
+    // match(['moo.cow', 'mad.moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
+    // match(['foob', 'foobb'], '!(foo)b*', ['foobb']);
   });
 });

@@ -2,7 +2,6 @@
 
 var extend = require('extend-shallow');
 var snapdragon = require('snapdragon');
-var normalizedCache = {};
 var cache = {};
 
 /**
@@ -25,7 +24,9 @@ function extglob(pattern, options) {
   if (opts.noextglob === true) {
     return pattern;
   }
-  var ast = extglob.parse(normalize(pattern), opts);
+
+  var normalized = set('normalized', normalize, pattern, opts);
+  var ast = extglob.parse(normalized, opts);
   return extglob.render(ast, opts);
 }
 
@@ -45,8 +46,7 @@ function extglob(pattern, options) {
 
 extglob.parse = function(str, options) {
   var parser = new snapdragon.Parser(options);
-  var sets = [];
-
+  var sets = {bracket: [], brace: [], paren: []};
   parser
     .use(function() {
       var pos = this.position();
@@ -87,21 +87,37 @@ extglob.parse = function(str, options) {
     })
     .use(function() {
       var pos = this.position();
-      var m = this.match(/^\[([!^])?(.)/);
+      var m = this.match(/^\[([!^]*)(.|$)/);
       if (!m) return;
-      return pos({
+      var token = {
         type: 'bracket.open',
-        val: m[0],
         prefix: m[1],
-        inner: m[2]
-      });
+        infix: m[2],
+        sets: sets,
+        val: m[0]
+      };
+      sets.bracket.push(token);
+      return pos(token);
     })
     .use(function() {
       var pos = this.position();
       var m = this.match(/^\]/);
       if (!m) return;
+
+      var token = sets.bracket.pop() || {};
+      var prefix = token.prefix;
+
+      if (typeof prefix === 'undefined') {
+        if (parser.options.strict === true) {
+          throw new Error('missing opening bracket');
+        }
+        token = {type: 'bracket.open', val: '['};
+      }
+
       return pos({
         type: 'bracket.close',
+        prev: token,
+        prefix: prefix,
         val: m[0]
       });
     })
@@ -109,43 +125,64 @@ extglob.parse = function(str, options) {
       var pos = this.position();
       var m = this.match(/^\(\)/);
       if (!m) return;
-
-      sets.push(m[1]);
-      return pos({
+      var token = {
         type: 'paren.empty',
         prefix: m[1],
         val: m[0]
-      });
+      };
+      sets.paren.push(token);
+      return pos(token);
     })
     .use(function() {
       var pos = this.position();
-      var m = this.match(/^([!^@*?+]?)\(/);
+      var m = this.match(/^([!^@*?+])\(/);
       if (!m) return;
-
-      sets.push(m[1]);
-      return pos({
+      var token = {
+        type: 'extglob.open',
+        prefix: m[1],
+        sets: sets,
+        val: m[0]
+      };
+      sets.paren.push(token);
+      return pos(token);
+    })
+    .use(function() {
+      var pos = this.position();
+      var m = this.match(/^(?![!^@*?+])\((\??[!:])?/);
+      if (!m) return;
+      var token = {
         type: 'paren.open',
         prefix: m[1],
+        sets: sets,
         val: m[0]
-      });
+      };
+      sets.paren.push(token);
+      return pos(token);
     })
     .use(function() {
       var pos = this.position();
       var m = this.match(/^\)/);
       if (!m) return;
 
-      if (!sets.length) {
-        throw new Error('missing opening parenthesis');
-      }
-
-      this.isOpen = false;
-      var ch = sets.pop();
+      var token = sets.paren.pop() || {};
+      var prefix = token.prefix;
       var val = ')';
 
-      switch (ch) {
+      if (typeof prefix === 'undefined') {
+        if (parser.options.strict === true) {
+          throw new Error('missing opening brace');
+        }
+        token = {type: 'brace.open', val: '('};
+      }
+
+      switch (prefix) {
         case '^':
         case '!':
-          val = ')[^/]*?';
+          if (/[a-z._-]/i.test(this.input.charAt(0))) {
+            val = '))[^/]*?';
+            break;
+          }
+          val = ')\\b)[^/]*?';
           break;
         case '+':
           val = ')+';
@@ -158,12 +195,12 @@ extglob.parse = function(str, options) {
           break;
         case '@':
         default: {
-          val = ')';
           break;
         }
       }
+
       return pos({
-        type: 'paren.close',
+        type: 'extglob.close',
         val: val
       });
     })
@@ -183,9 +220,17 @@ extglob.parse = function(str, options) {
     })
     .use(function() {
       var pos = this.position();
+      var m = this.match(/^[*][.][*]/);
+      if (!m) return;
+      return pos({
+        type: 'globname',
+        val: m[0]
+      });
+    })
+    .use(function() {
+      var pos = this.position();
       var m = this.match(/^(?!\W)?[*](?!\()/);
       if (!m) return;
-
       return pos({
         type: 'star',
         prev: this.nodes[this.nodes.length - 1],
@@ -223,7 +268,7 @@ extglob.parse = function(str, options) {
     })
     .use(function() {
       var pos = this.position();
-      var m = this.match(/^-/);
+      var m = this.match(/^[-]/);
       if (!m) return;
       return pos({
         type: 'dash',
@@ -232,7 +277,7 @@ extglob.parse = function(str, options) {
     })
     .use(function() {
       var pos = this.position();
-      var m = this.match(/^,/);
+      var m = this.match(/^[,]/);
       if (!m) return;
       return pos({
         type: 'comma',
@@ -267,7 +312,23 @@ extglob.parse = function(str, options) {
       });
     });
 
-  return parser.parse(str);
+  var ast = parser.parse(str);
+
+  /**
+   * Fix missing => `[]`, `{}`, `()`
+   */
+
+  for (var key in sets) {
+    if (sets.hasOwnProperty(key)) {
+      sets[key].forEach(function(token) {
+        if (token.type === key + '.open') {
+          token.val = '\\' + token.val;
+          token.esc = true;
+        }
+      });
+    }
+  }
+  return ast;
 };
 
 /**
@@ -285,6 +346,22 @@ extglob.parse = function(str, options) {
  */
 
 extglob.render = function(ast, options) {
+  function extglobOpen(node)  {
+    switch (node.prefix) {
+      case '!':
+      case '^':
+        return '(?!(?:';
+      case '@':
+      case '+':
+      case '*':
+      case '?':
+        return '(?:';
+      default: {
+        return node.val;
+      }
+    }
+  }
+
   var renderer = new snapdragon.Renderer(options)
     .set('escaped', function(node)  {
       return node.val;
@@ -292,22 +369,9 @@ extglob.render = function(ast, options) {
     .set('paren.empty', function(node)  {
       return '.?';
     })
-    .set('paren.open', function(node)  {
-      switch (node.prefix) {
-        case '!':
-        case '^':
-          return '(?!';
-        case '@':
-        case '+':
-        case '*':
-        case '?':
-          return '(?:';
-        default: {
-          return node.val;
-        }
-      }
-    })
-    .set('paren.close', function(node)  {
+    .set('paren.open', extglobOpen)
+    .set('extglob.open', extglobOpen)
+    .set('extglob.close', function(node)  {
       return node.val;
     })
     .set('bracket.empty', function(node)  {
@@ -317,16 +381,19 @@ extglob.render = function(ast, options) {
       return '\\]';
     })
     .set('bracket.open', function(node)  {
-      if (/^[\[\]]/.test(node.inner)) {
-        node.inner = '\\' + node.inner;
+      if (/^[\[\]]/.test(node.infix)) {
+        node.infix = '\\' + node.infix;
       }
-      return '[' + (node.prefix ? '^' : '') + node.inner;
+      return '[' + (node.prefix ? '^' : '') + node.infix;
     })
     .set('bracket.close', function(node)  {
       return node.val;
     })
     .set('globstar', function(node)  {
       return '(?:(?!(?:\\\/|^)\\.).)*?';
+    })
+    .set('globname', function(node)  {
+      return '([^.]*[.][^.]*)';
     })
     .set('star', function(node)  {
       if (node.prev && node.prev.esc) {
@@ -335,14 +402,11 @@ extglob.render = function(ast, options) {
         return '[^/]*?';
       }
     })
-    .set('plus', function(node)  {
-      return node.val;
-    })
-    .set('dot', function(node)  {
-      return '\\' + node.val;
-    })
     .set('qmark', function(node)  {
       return node.val ? (node.val + '?') : '?';
+    })
+    .set('plus', function(node)  {
+      return node.val;
     })
     .set('dash', function(node)  {
       return '-';
@@ -352,6 +416,9 @@ extglob.render = function(ast, options) {
     })
     .set('comma', function(node)  {
       return '|';
+    })
+    .set('dot', function(node)  {
+      return '\\' + node.val;
     })
     .set('slash', function(node)  {
       return '\\/';
@@ -368,8 +435,12 @@ extglob.render = function(ast, options) {
 
   str = str.replace(/^\?/, '');
   str = str.replace(/\?\?$/, '?');
+
+  if (renderer.options.literal === true) {
+    str = escapeRe(renderer.original);
+  }
   return str;
-}
+};
 
 /**
  * Create a regular expression from the given extglob `pattern`.
@@ -387,22 +458,17 @@ extglob.render = function(ast, options) {
  */
 
 extglob.makeRe = function(pattern, options) {
-  if (cache[pattern]) return cache[pattern];
-
   options = options || {};
-
   if (/[*+]$/.test(pattern)) {
     options.strictClose = false;
   }
   if (/^[!^@*?+]/.test(pattern) && options.strictClose === false) {
     options.strictOpen = false;
   }
-
   var re = !(pattern instanceof RegExp)
     ? regex(extglob(pattern, options), options)
     : pattern;
 
-  cache[pattern] = re;
   return re;
 };
 
@@ -472,7 +538,7 @@ extglob.matcher = function(pattern, options) {
  */
 
 extglob.match = function(arr, pattern, options) {
-  arr = Array.isArray(arr) ? arr : [arr];
+  arr = [].concat(arr);
   var isMatch = extglob.matcher(pattern, options);
   var len = arr.length;
   var idx = -1;
@@ -501,19 +567,33 @@ function regex(str, options) {
 }
 
 /**
+ * Cache patterns
+ *
+ * @param {String} `type` Pattern "type"
+ * @param {Function} `fn` Function to call when the pattern isn't cached yet
+ * @param {String} `pattern`
+ * @param {String} `options`
+ */
+
+function set(type, fn, pattern, options) {
+  var obj = cache[type] || (cache[type] = {});
+  if (obj.hasOwnProperty(pattern)) {
+    return obj[pattern];
+  }
+  obj[pattern] = fn(pattern, options);
+  return obj[pattern];
+}
+
+/**
  * Pre-processs the extglob pattern
  */
 
 function normalize(str) {
-  if (normalizedCache[str]) return normalizedCache[str];
-
-  str = str.replace(/^\^|\$$/g, '');
+  str = str.replace(/^\^|\$$/g, '\\b');
   str = str.split('?|?').join('?)|(?');
 
-  var orig = str;
   var re = /([^!@*?+]*?)([!@*?+])\((([^*]*?)[*]?[.]([^)]*?))\)(.*)/;
   var prefix;
-  var first;
   var m;
 
   while (m = re.exec(str)) {
@@ -529,9 +609,12 @@ function normalize(str) {
   if (prefix) {
     str = str.replace(/[*]?([!@*?+])\(/g, '*.$1(');
   }
-
-  normalizedCache[orig] = str;
   return str;
+}
+
+function escapeRe(str) {
+  str = str.split('\\').join('');
+  return str.replace(/[|{}()[\]^$+*?.]/g, '\\$&');
 }
 
 /**
