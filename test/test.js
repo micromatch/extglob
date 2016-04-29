@@ -269,6 +269,9 @@ describe('bash', function() {
   });
 
   it('should support exclusions (match)', function() {
+    // match(['foo'], '*(!(foo))', ['foo']);
+    // match(['moo.cow', 'mad.moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
+    // match(['foob', 'foobb'], '!(foo)b*', ['foobb']);
     match(['aaac', 'foo'], '*(@(a))a@(c)', ['aaac']);
     match(['aaac'], '*(@(a))a@(c)', ['aaac']);
     match(['aac'], '*(@(a))a@(c)', ['aac']);
@@ -341,8 +344,5 @@ describe('bash', function() {
     match(['foob', 'foobb'], '(foo)bb', ['foobb']);
     match(['foo'], '!(!(foo))', ['foo']);
     match(['foo'], '*((foo))', ['foo']);
-    // match(['foo'], '*(!(foo))', ['foo']);
-    // match(['moo.cow', 'mad.moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
-    // match(['foob', 'foobb'], '!(foo)b*', ['foobb']);
   });
 });

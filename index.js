@@ -52,6 +52,24 @@ extglob.parse = function(str, options) {
   parser
     .use(function() {
       var pos = this.position();
+      var m = this.match(/^\^(?=.)/);
+      if (!m) return;
+      return pos({
+        type: 'start',
+        val: m[0]
+      });
+    })
+    .use(function() {
+      var pos = this.position();
+      var m = this.match(/(?=.\$)\$$/);
+      if (!m) return;
+      return pos({
+        type: 'end',
+        val: m[0]
+      });
+    })
+    .use(function() {
+      var pos = this.position();
       var m = this.match(/^\\(.)/);
       if (!m) return;
       return pos({
@@ -366,7 +384,18 @@ extglob.render = function(ast, options) {
     }
   }
 
-  var renderer = new snapdragon.Renderer(options)
+  var renderer = new snapdragon.Renderer(options);
+  if (renderer.options.literal === true) {
+    return escapeRe(ast.original);
+  }
+
+  renderer
+    .set('start', function(node)  {
+      return '\\b';
+    })
+    .set('end', function(node)  {
+      return '\\b';
+    })
     .set('escaped', function(node)  {
       return node.val;
     })
@@ -443,11 +472,9 @@ extglob.render = function(ast, options) {
     });
 
   var res = renderer.render(ast);
-  var str = res.rendered;
-  if (renderer.options.literal === true) {
-    str = escapeRe(renderer.original);
-  }
-  return str;
+
+  console.log(res.rendered);
+  return res.rendered;
 };
 
 /**
@@ -621,7 +648,6 @@ function set(type, fn, pattern, options) {
  */
 
 function normalize(str) {
-  str = str.replace(/^\^|\$$/g, '\\b');
   str = str.split('?|?').join('?)|(?');
 
   var re = /([^!@*?+]*?)([!@*?+])\((([^*]*?)[*]?[.]([^)]*?))\)(.*)/;
