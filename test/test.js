@@ -10,77 +10,17 @@
 require('mocha');
 require('should');
 var assert = require('assert');
-var argv = require('minimist')(process.argv.slice(2));
-var extglob = require('./');
-var failing = 0;
-var passing = 0;
-var mm;
-
-function isMatch(str, pattern, options) {
-  if ('mm' in argv) {
-    mm = require('minimatch');
-    try {
-      var re = mm.makeRe(pattern, options);
-      assert(re.test(pattern));
-      passing++;
-    } catch (err) {
-      failing++;
-    }
-    return;
-  }
-  try {
-    assert(extglob.isMatch(str, pattern, options));
-    passing++;
-  } catch (err) {
-    failing++;
-  }
-}
-
-function isNotMatch(str, pattern, options) {
-  if ('mm' in argv) {
-    mm = require('minimatch');
-    try {
-      var re = mm.makeRe(pattern, options);
-      assert(!re.test(pattern));
-      passing++;
-    } catch (err) {
-      failing++;
-    }
-    return;
-  }
-  try {
-    assert(!extglob.isMatch(str, pattern, options));
-    passing++;
-  } catch (err) {
-    failing++;
-  }
-}
-
-function match(arr, pattern, expected, msg) {
-  if ('mm' in argv) {
-    mm = require('minimatch');
-    try {
-      var res = mm.match(arr, pattern);
-      assert.deepEqual(res.sort(), expected.sort(), msg);
-      passing++;
-    } catch (err) {
-      failing++;
-    }
-    return;
-  }
-  var res = extglob.match(arr, pattern);
-  try {
-    assert.deepEqual(res.sort(), expected.sort(), msg);
-    passing++;
-  } catch (err) {
-    failing++;
-  }
-}
+var support = require('./support');
+var counts = support.counts;
+var isNotMatch = support.isNotMatch;
+var isMatch = support.isMatch;
+var match = support.match;
 
 describe('extglobs', function() {
   after(function() {
-    console.log('failing:', failing);
-    console.log('passing:', passing);
+    console.log();
+    console.log('    failing:', counts.failing);
+    console.log('    passing:', counts.passing);
   });
 
   it('should match extended globs:', function() {
@@ -261,8 +201,10 @@ describe('extglobs', function() {
 
 describe('bash', function() {
   after(function() {
-    console.log('failing:', failing);
-    console.log('passing:', passing);
+    console.log();
+    console.log('    TOTAL');
+    console.log('    failing:', counts.failing);
+    console.log('    passing:', counts.passing);
   });
 
   it('should match extended globs from the bash spec:', function() {

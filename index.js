@@ -603,7 +603,7 @@ function normalize(str) {
   var prefix;
   var m;
 
-  while (m = re.exec(str)) {
+  while ((m = re.exec(str))) {
     if (m[3] && /[*]?[.]\w/.test(m[3])) {
       str = str.replace(/[*][.]/g, '');
       str = m[1] + m[2] + '(' + m[4] + m[5] + ')' + m[6];
