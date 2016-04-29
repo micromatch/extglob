@@ -2,6 +2,8 @@
 
 var extend = require('extend-shallow');
 var snapdragon = require('snapdragon');
+var regexCache = {};
+var makeReCache = {};
 var cache = {};
 
 /**
@@ -465,17 +467,28 @@ extglob.render = function(ast, options) {
 
 extglob.makeRe = function(pattern, options) {
   options = options || {};
+  var key = pattern;
+
   if (/[*+]$/.test(pattern)) {
     options.strictClose = false;
+    key += ':false';
   }
+
   if (/^[!^@*?+]/.test(pattern) && options.strictClose === false) {
     options.strictOpen = false;
+    key += ':false';
+  }
+
+  key += options.literal;
+  if (makeReCache.hasOwnProperty(key)) {
+    return makeReCache[key];
   }
 
   var re = !(pattern instanceof RegExp)
     ? regex(extglob(pattern, options), options)
     : pattern;
 
+  makeReCache[key] = re;
   return re;
 };
 
@@ -567,10 +580,22 @@ function regex(str, options) {
   var opts = extend({}, options);
   var open = opts.strictOpen === false ? '' : '^';
   var close = opts.strictClose === false ? '' : '$';
-  if (opts.contains === true) {
-    return new RegExp(str, opts.flags);
+  var contains = opts.contains;
+  var regex;
+
+  var key = str + ':' + open + ':' + close + ':' + contains;
+  if (regexCache.hasOwnProperty(key)) {
+    return regexCache[key];
   }
-  return new RegExp(open + str + close, opts.flags);
+
+  if (contains === true) {
+    regex = new RegExp(str, opts.flags);
+  } else {
+    regex = new RegExp(open + str + close, opts.flags);
+  }
+
+  regexCache[key] = regex;
+  return regex;
 }
 
 /**
