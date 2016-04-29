@@ -260,7 +260,16 @@ extglob.parse = function(str, options) {
     })
     .use(function() {
       var pos = this.position();
-      var m = this.match(/^(.)?\?+/);
+      var m = this.match(/^(?=.)[?][|][?](?=.)/);
+      if (!m) return;
+      return pos({
+        type: 'qmark.or',
+        val: m[0]
+      });
+    })
+    .use(function() {
+      var pos = this.position();
+      var m = this.match(/^(.)?\?+(?![|])/);
       if (!m) return;
       var re = /(?=^|\W(?=.))[?]+(?![(])/;
       return pos({
@@ -434,6 +443,9 @@ extglob.render = function(ast, options) {
       } else {
         return '[^/]*?';
       }
+    })
+    .set('qmark.or', function(node, nodes, i)  {
+      return '?)|(?:';
     })
     .set('qmark', function(node, nodes, i)  {
       if (nodes.length === 1) {
@@ -648,8 +660,6 @@ function set(type, fn, pattern, options) {
  */
 
 function normalize(str) {
-  str = str.split('?|?').join('?)|(?');
-
   var re = /([^!@*?+]*?)([!@*?+])\((([^*]*?)[*]?[.]([^)]*?))\)(.*)/;
   var prefix;
   var m;
