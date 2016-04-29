@@ -1,11 +1,9 @@
 'use strict';
 
-var util = require('util');
 var extend = require('extend-shallow');
 var snapdragon = require('snapdragon');
-var regexCache = {};
 var makeReCache = {};
-var cache = {};
+var regexCache = {};
 
 /**
  * Convert the given `extglob` pattern into a regex-compatible string.
@@ -45,9 +43,7 @@ function extglob(pattern, options) {
 
   var open = opts.strictopen === false ? '' : '^';
   var close = opts.strictclose === false ? '' : '$';
-
-  var out = open + ast.prefix + res.rendered + close;
-  return out;
+  return open + ast.prefix + res.rendered + close;
 }
 
 /**
@@ -313,7 +309,7 @@ extglob.parse = function(pattern, options) {
       return pos({
         type: 'star',
         prev: prev,
-        val: m[0]
+        val: val
       });
     })
     .use(function() {
@@ -552,7 +548,6 @@ extglob.render = function(ast, options) {
     .set('dot', function(node, nodes, idx)  {
       var prev = nodes[idx - 1] || {};
       var val = prev.val || '';
-      console.log(val)
       if (idx === 0 || /\/$/.test(val) || this.options.dot === true) {
         return '(?!(?:^|\\\/)\\.{1,2}(?:$|\\\/))';
       }
@@ -707,9 +702,6 @@ extglob.match = function(arr, pattern, options) {
 
 function regex(str, options) {
   var opts = extend({}, options);
-  var contains = opts.contains;
-  var re;
-
   var key = str;
   for (var prop in opts) {
     if (opts.hasOwnProperty(prop)) {
