@@ -87,7 +87,7 @@ extglob.parse = function(str, options) {
     })
     .use(function() {
       var pos = this.position();
-      var m = this.match(/^\[([!^]*)(.|$)/);
+      var m = this.match(/^\[([!^]*)(.)/);
       if (!m) return;
       var token = {
         type: 'bracket.open',
@@ -178,11 +178,11 @@ extglob.parse = function(str, options) {
       switch (prefix) {
         case '^':
         case '!':
-          if (/[a-z._-]/i.test(this.input.charAt(0))) {
+          if (/\w/i.test(this.input.charAt(0))) {
             val = '))[^/]*?';
-            break;
+          } else {
+            val = ')\\b)[^/]*?';
           }
-          val = ')\\b)[^/]*?';
           break;
         case '+':
           val = ')+';
@@ -238,6 +238,18 @@ extglob.parse = function(str, options) {
         val: m[0]
       });
     })
+    .use(function() {
+      var pos = this.position();
+      var m = this.match(/^(.)?\?+/);
+      if (!m) return;
+      var re = /(?=^|\W(?=.))[?]+(?![(])/;
+      return pos({
+        type: 'qmark',
+        esc: re.test(m[0]),
+        prefix: m[1],
+        val: m[0]
+      });
+    })
    .use(function() {
       var pos = this.position();
       var m = this.match(/^[|]/);
@@ -245,16 +257,6 @@ extglob.parse = function(str, options) {
       return pos({
         type: 'pipe',
         val: m[0]
-      });
-    })
-    .use(function() {
-      var pos = this.position();
-      var m = this.match(/^(.)?\?/);
-      if (!m) return;
-
-      return pos({
-        type: 'qmark',
-        val: m[1] || ''
       });
     })
     .use(function() {
@@ -402,8 +404,16 @@ extglob.render = function(ast, options) {
         return '[^/]*?';
       }
     })
-    .set('qmark', function(node)  {
-      return node.val ? (node.val + '?') : '?';
+    .set('qmark', function(node, nodes, i)  {
+      if (nodes.length === 1) {
+        return '[^/]{0,' + node.val.length + '}';
+      }
+
+      var prev = nodes[i - 1];
+      if (typeof prev === 'undefined' || prev.type === 'extglob.close') {
+        return node.prefix || '';
+      }
+      return node.val;
     })
     .set('plus', function(node)  {
       return node.val;
@@ -430,12 +440,8 @@ extglob.render = function(ast, options) {
       return node.val;
     });
 
-  var obj = renderer.render(ast);
-  var str = obj.rendered;
-
-  str = str.replace(/^\?/, '');
-  str = str.replace(/\?\?$/, '?');
-
+  var res = renderer.render(ast);
+  var str = res.rendered;
   if (renderer.options.literal === true) {
     str = escapeRe(renderer.original);
   }
@@ -465,6 +471,7 @@ extglob.makeRe = function(pattern, options) {
   if (/^[!^@*?+]/.test(pattern) && options.strictClose === false) {
     options.strictOpen = false;
   }
+
   var re = !(pattern instanceof RegExp)
     ? regex(extglob(pattern, options), options)
     : pattern;
