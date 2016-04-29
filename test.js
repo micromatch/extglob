@@ -12,21 +12,77 @@ require('should');
 var assert = require('assert');
 var argv = require('minimist')(process.argv.slice(2));
 var extglob = require('./');
-var isMatch = extglob.isMatch;
-var idx = 0;
+var failing = 0;
+var passing = 0;
 var mm;
+
+function isMatch(str, pattern, options) {
+  if ('mm' in argv) {
+    mm = require('minimatch');
+    try {
+      var re = mm.makeRe(pattern, options);
+      assert(re.test(pattern));
+      passing++;
+    } catch (err) {
+      failing++;
+    }
+    return;
+  }
+  try {
+    assert(extglob.isMatch(str, pattern, options));
+    passing++;
+  } catch (err) {
+    failing++;
+  }
+}
+
+function isNotMatch(str, pattern, options) {
+  if ('mm' in argv) {
+    mm = require('minimatch');
+    try {
+      var re = mm.makeRe(pattern, options);
+      assert(!re.test(pattern));
+      passing++;
+    } catch (err) {
+      failing++;
+    }
+    return;
+  }
+  try {
+    assert(!extglob.isMatch(str, pattern, options));
+    passing++;
+  } catch (err) {
+    failing++;
+  }
+}
 
 function match(arr, pattern, expected, msg) {
   if ('mm' in argv) {
     mm = require('minimatch');
-    pattern = mm.makeRe(pattern);
+    try {
+      var res = mm.match(arr, pattern);
+      assert.deepEqual(res.sort(), expected.sort(), msg);
+      passing++;
+    } catch (err) {
+      failing++;
+    }
+    return;
   }
   var res = extglob.match(arr, pattern);
-  assert.deepEqual(res.sort(), expected.sort(), msg);
-  return res;
+  try {
+    assert.deepEqual(res.sort(), expected.sort(), msg);
+    passing++;
+  } catch (err) {
+    failing++;
+  }
 }
 
 describe('extglobs', function() {
+  after(function() {
+    console.log('failing:', failing);
+    console.log('passing:', passing);
+  });
+
   it('should match extended globs:', function() {
     match(['a/z', 'a/b'], 'a/!(z)', ['a/b']);
     match(['c/z/v'], 'c/z/v', ['c/z/v']);
@@ -56,10 +112,18 @@ describe('extglobs', function() {
   });
 
   it('should support exclusion patterns:', function() {
-    var arr = ['a.a', 'a.b', 'a.a.a', 'c.a', 'a.', 'd.a.d'];
-    match(arr, '*.+(b|d)', ['d.a.d', 'a.b']);
-    match(arr, '*.!(a)', ['d.a.d', 'a.', 'a.b']);
-    match(arr, '*.!(*a)', ['d.a.d', 'a.', 'a.b']);
+    var arr = ['a.a', 'a.b', 'a.a.a', 'c.a', 'a.', 'd.a.d', 'a.bb', 'a.ccc'];
+    match(arr, '*.+(b|d)', ['d.a.d', 'a.b', 'a.bb']);
+    match(arr, '*.!(a)', ['d.a.d', 'a.', 'a.b', 'a.bb', 'a.ccc']);
+    match(arr, '*.!(*a)', ['d.a.d', 'a.', 'a.b', 'a.bb', 'a.ccc']);
+    match(arr, 'a.!(*a)', ['a.', 'a.b', 'a.bb', 'a.ccc']);
+  });
+
+  it('should support qmark matching', function() {
+    var arr = ['a', 'aa', 'ab', 'aaa', 'abcdefg'];
+    match(arr, '?', ['a']);
+    match(arr, '??', ['a', 'aa', 'ab']);
+    match(arr, '???', ['a', 'aa', 'ab', 'aaa']);
   });
 
   it('should match exactly one of the given pattern:', function() {
@@ -88,20 +152,20 @@ describe('extglobs', function() {
   });
 
   it('stuff from korn\'s book', function() {
-    assert(isMatch('paragraph', 'para@(chute|graph)'));
-    assert(!isMatch('paramour', 'para@(chute|graph)'));
-    assert(isMatch('para991', 'para?([345]|99)1'));
-    assert(!isMatch('para381', 'para?([345]|99)1'));
-    assert(!isMatch('paragraph', 'para*([0-9])'));
-    assert(isMatch('para', 'para*([0-9])'));
-    assert(isMatch('para13829383746592', 'para*([0-9])'));
-    assert(!isMatch('paragraph', 'para*([0-9])'));
-    assert(!isMatch('para', 'para+([0-9])'));
-    assert(isMatch('para987346523', 'para+([0-9])'));
-    assert(isMatch('paragraph', 'para!(*.[0-9])'));
-    assert(isMatch('para.38', 'para!(*.[00-09])'));
-    assert(isMatch('para.graph', 'para!(*.[0-9])'));
-    assert(isMatch('para39', 'para!(*.[0-9])'));
+    isMatch('paragraph', 'para@(chute|graph)');
+    isNotMatch('paramour', 'para@(chute|graph)');
+    isMatch('para991', 'para?([345]|99)1');
+    isNotMatch('para381', 'para?([345]|99)1');
+    isNotMatch('paragraph', 'para*([0-9])');
+    isMatch('para', 'para*([0-9])');
+    isMatch('para13829383746592', 'para*([0-9])');
+    isNotMatch('paragraph', 'para*([0-9])');
+    isNotMatch('para', 'para+([0-9])');
+    isMatch('para987346523', 'para+([0-9])');
+    isMatch('paragraph', 'para!(*.[0-9])');
+    isMatch('para.38', 'para!(*.[00-09])');
+    isMatch('para.graph', 'para!(*.[0-9])');
+    isMatch('para39', 'para!(*.[0-9])');
   });
 
   it('tests derived from those in rosenblatt\'s korn shell book', function() {
@@ -124,14 +188,14 @@ describe('extglobs', function() {
   });
 
   it('simple kleene star tests', function() {
-    assert(!isMatch('foo', '*(a|b\\[)'));
-    assert(isMatch('foo', '*(a|b\\[)|f*'));
+    isNotMatch('foo', '*(a|b\\[)');
+    isMatch('foo', '*(a|b\\[)|f*');
   });
 
   it('this doesn\'t work in bash either (per bash extglob.tests notes)', function() {
-    assert(!isMatch('*(a|b[)', '*(a|b\\[)'));
-    assert(isMatch('*(a|b[)', '\\*\\(a\\|b\\[\\)'));
-    assert(isMatch('*(a|b[)', '*(a|b\\[)', {literal: true}));
+    isNotMatch('*(a|b[)', '*(a|b\\[)');
+    isMatch('*(a|b[)', '\\*\\(a\\|b\\[\\)');
+    isMatch('*(a|b[)', '*(a|b\\[)', {literal: true});
   });
 
   it('should support multiple exclusion patterns in one extglob:', function() {
@@ -196,65 +260,73 @@ describe('extglobs', function() {
 });
 
 describe('bash', function() {
-  it('should match extended globs from the bash spec:', function() {
-    assert(isMatch('fofo', '*(f*(o))'));
-    assert(isMatch('ffo', '*(f*(o))'));
-    assert(isMatch('foooofo', '*(f*(o))'));
-    assert(isMatch('foooofof', '*(f*(o))'));
-    assert(isMatch('fooofoofofooo', '*(f*(o))'));
-    assert(!isMatch('foooofof', '*(f+(o))'));
-    assert(!isMatch('xfoooofof', '*(f*(o))'));
-    assert(!isMatch('foooofofx', '*(f*(o))'));
-    assert(isMatch('ofxoofxo', '*(*(of*(o)x)o)'));
-    assert(!isMatch('ofooofoofofooo', '*(f*(o))'));
-    assert(isMatch('foooxfooxfoxfooox', '*(f*(o)x)'));
-    assert(!isMatch('foooxfooxofoxfooox', '*(f*(o)x)'));
-    assert(isMatch('foooxfooxfxfooox', '*(f*(o)x)'));
-    assert(isMatch('ofxoofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxoofoooxoofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxoofoooxoofxoo', '*(*(of*(o)x)o)'));
-    assert(!isMatch('ofoooxoofxoofoooxoofxofo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxoofoooxoofxooofxofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('aac', '*(@(a))a@(c)'));
-    assert(isMatch('ac', '*(@(a))a@(c)'));
-    assert(!isMatch('c', '*(@(a))a@(c)'));
-    assert(isMatch('aaac', '*(@(a))a@(c)'));
-    assert(!isMatch('baaac', '*(@(a))a@(c)'));
-    assert(isMatch('abcd', '?@(a|b)*@(c)d'));
-    assert(isMatch('abcd', '@(ab|a*@(b))*(c)d'));
-    assert(isMatch('acd', '@(ab|a*(b))*(c)d'));
-    assert(isMatch('abbcd', '@(ab|a*(b))*(c)d'));
-    assert(isMatch('effgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('efgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('egz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('egzefffgzbcdij', '*(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(!isMatch('egz', '@(b+(c)d|e+(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('ofoofo', '*(of+(o))'));
-    assert(isMatch('oxfoxoxfox', '*(oxf+(ox))'));
-    assert(!isMatch('oxfoxfox', '*(oxf+(ox))'));
-    assert(isMatch('ofoofo', '*(of+(o)|f)'));
-    assert(isMatch('foofoofo', '@(foo|f|fo)*(f|of+(o))'), 'Should match as fo+ofo+ofo');
-    assert(isMatch('oofooofo', '*(of|oof+(o))'));
-    assert(isMatch('fffooofoooooffoofffooofff', '*(*(f)*(o))'));
-    assert(isMatch('fofoofoofofoo', '*(fo|foo)'), 'Should backtrack in alternation matches');
+  after(function() {
+    console.log('failing:', failing);
+    console.log('passing:', passing);
   });
 
-  it('should support exclusions', function() {
-    assert(!isMatch('f', '!(f)'));
-    assert(!isMatch('f', '*(!(f))'));
-    assert(!isMatch('f', '+(!(f))'));
-    assert(!isMatch('mad.moo.cow', '!(*.*).!(*.*)'));
-    assert(!isMatch('mucca.pazza', 'mu!(*(c))?.pa!(*(z))?'));
-    assert(!isMatch('zoot', '@(!(z*)|*x)'));
-    assert(isMatch('foo', '!(x)'));
-    assert(isMatch('foo', '!(x)*'));
-    assert(isMatch('foot', '@(!(z*)|*x)'));
-    assert(isMatch('foox', '@(!(z*)|*x)'));
-    assert(isMatch('ooo', '!(f)'));
-    assert(isMatch('ooo', '*(!(f))'));
-    assert(isMatch('ooo', '+(!(f))'));
-    assert(isMatch('zoox', '@(!(z*)|*x)'));
+  it('should match extended globs from the bash spec:', function() {
+    isMatch('fofo', '*(f*(o))');
+    isMatch('ffo', '*(f*(o))');
+    isMatch('foooofo', '*(f*(o))');
+    isMatch('foooofof', '*(f*(o))');
+    isMatch('fooofoofofooo', '*(f*(o))');
+    isNotMatch('foooofof', '*(f+(o))');
+    isNotMatch('xfoooofof', '*(f*(o))');
+    isNotMatch('foooofofx', '*(f*(o))');
+    isMatch('ofxoofxo', '*(*(of*(o)x)o)');
+    isNotMatch('ofooofoofofooo', '*(f*(o))');
+    isMatch('foooxfooxfoxfooox', '*(f*(o)x)');
+    isNotMatch('foooxfooxofoxfooox', '*(f*(o)x)');
+    isMatch('foooxfooxfxfooox', '*(f*(o)x)');
+    isMatch('ofxoofxo', '*(*(of*(o)x)o)');
+    isMatch('ofoooxoofxo', '*(*(of*(o)x)o)');
+    isMatch('ofoooxoofxoofoooxoofxo', '*(*(of*(o)x)o)');
+    isMatch('ofoooxoofxoofoooxoofxoo', '*(*(of*(o)x)o)');
+    isNotMatch('ofoooxoofxoofoooxoofxofo', '*(*(of*(o)x)o)');
+    isMatch('ofoooxoofxoofoooxoofxooofxofxo', '*(*(of*(o)x)o)');
+    isMatch('aac', '*(@(a))a@(c)');
+    isMatch('ac', '*(@(a))a@(c)');
+    isNotMatch('c', '*(@(a))a@(c)');
+    isMatch('aaac', '*(@(a))a@(c)');
+    isNotMatch('baaac', '*(@(a))a@(c)');
+    isMatch('abcd', '?@(a|b)*@(c)d');
+    isMatch('abcd', '@(ab|a*@(b))*(c)d');
+    isMatch('acd', '@(ab|a*(b))*(c)d');
+    isMatch('abbcd', '@(ab|a*(b))*(c)d');
+    isMatch('effgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))');
+    isMatch('efgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))');
+    isMatch('egz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))');
+    isMatch('egzefffgzbcdij', '*(b+(c)d|e*(f)g?|?(h)i@(j|k))');
+    isNotMatch('egz', '@(b+(c)d|e+(f)g?|?(h)i@(j|k))');
+    isMatch('ofoofo', '*(of+(o))');
+    isMatch('oxfoxoxfox', '*(oxf+(ox))');
+    isNotMatch('oxfoxfox', '*(oxf+(ox))');
+    isMatch('ofoofo', '*(of+(o)|f)');
+    isMatch('foofoofo', '@(foo|f|fo)*(f|of+(o))'), 'Should match as fo+ofo+ofo';
+    isMatch('oofooofo', '*(of|oof+(o))');
+    isMatch('fffooofoooooffoofffooofff', '*(*(f)*(o))');
+    isMatch('fofoofoofofoo', '*(fo|foo)'), 'Should backtrack in alternation matches';
+  });
+
+  it('should support exclusions (isMatch)', function() {
+    isNotMatch('f', '!(f)');
+    isNotMatch('f', '*(!(f))');
+    isNotMatch('f', '+(!(f))');
+    isNotMatch('mad.moo.cow', '!(*.*).!(*.*)');
+    isNotMatch('zoot', '@(!(z*)|*x)');
+
+    isMatch('foo', '!(x)');
+    isMatch('foo', '!(x)*');
+    isMatch('foot', '@(!(z*)|*x)');
+    isMatch('foox', '@(!(z*)|*x)');
+    isMatch('ooo', '!(f)');
+    isMatch('ooo', '*(!(f))');
+    isMatch('ooo', '+(!(f))');
+    isMatch('zoox', '@(!(z*)|*x)');
+  });
+
+  it('should support exclusions (match)', function() {
     match(['aaac', 'foo'], '*(@(a))a@(c)', ['aaac']);
     match(['aaac'], '*(@(a))a@(c)', ['aaac']);
     match(['aac'], '*(@(a))a@(c)', ['aac']);
@@ -327,8 +399,8 @@ describe('bash', function() {
     match(['foob', 'foobb'], '(foo)bb', ['foobb']);
     match(['foo'], '!(!(foo))', ['foo']);
     match(['foo'], '*((foo))', ['foo']);
-    // match(['foo'], '*(!(foo))', ['foo']);
-    // match(['moo.cow', 'mad.moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
-    // match(['foob', 'foobb'], '!(foo)b*', ['foobb']);
+    match(['foo'], '*(!(foo))', ['foo']);
+    match(['moo.cow', 'mad.moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
+    match(['foob', 'foobb'], '!(foo)b*', ['foobb']);
   });
 });
