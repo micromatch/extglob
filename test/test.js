@@ -1,42 +1,22 @@
-/*!
- * extglob <https://github.com/jonschlinkert/extglob>
- *
- * Copyright (c) 2015, Jon Schlinkert.
- * Licensed under the MIT License.
- */
-
 'use strict';
 
-require('mocha');
-require('should');
 var assert = require('assert');
 var argv = require('minimist')(process.argv.slice(2));
-var extglob = require('..');
-var isMatch = extglob.isMatch;
-var idx = 0;
-var mm;
+var minimatch = require('minimatch');
+var extglob = require('..');;
+
+var matcher = argv.mm ? minimatch : extglob;
+var isMatch = argv.mm ? minimatch : extglob.isMatch;
+
+function match(arr, pattern, expected, options) {
+  var actual = matcher.match(arr, pattern, options);
+  assert.deepEqual(actual.sort(), expected.sort());
+}
 
 /**
  * These unit tests are converted directly from the bash 4.3 and 4.4
  * unit tests.
  */
-
-
-function match(arr, pattern, expected, msg) {
-  if ('mm' in argv) {
-    mm = require('minimatch');
-    pattern = mm.makeRe(pattern);
-  }
-  var res = extglob.match(arr, pattern);
-  try {
-    assert.deepEqual(res.sort(), expected.sort(), msg);
-  } catch (err) {
-    err.message = '\n      ' + extglob(pattern) + '\n      ' + err.message;
-    err.message += ' (' + pattern + ')';
-    throw err;
-  }
-  return res;
-}
 
 describe.skip('failing', function() {
   it('*(!(foo))', function() {
