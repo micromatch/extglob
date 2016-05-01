@@ -139,7 +139,6 @@ describe('extglobs', function() {
   it('this doesn\'t work in bash either (per bash extglob.tests notes)', function() {
     assert(!isMatch('*(a|b[)', '*(a|b\\[)'));
     assert(isMatch('*(a|b[)', '\\*\\(a\\|b\\[\\)'));
-    assert(isMatch('*(a|b[)', '*(a|b\\[)', {literal: true}));
   });
 
   it('should support multiple exclusion patterns in one extglob:', function() {

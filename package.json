@@ -1,6 +1,6 @@
 {
   "name": "extglob",
-  "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
+  "description": "Adds (almost) the expressive power of regular expressions to glob patterns!",
   "version": "0.3.2",
   "homepage": "https://github.com/jonschlinkert/extglob",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -21,13 +21,19 @@
   },
   "dependencies": {
     "extend-shallow": "^2.0.1",
-    "snapdragon": "^0.4.1"
+    "is-extglob": "^1.0.0",
+    "snapdragon": "^0.4.2"
   },
   "devDependencies": {
+    "cross-spawn-async": "^2.2.2",
+    "delete": "^0.3.1",
+    "export-files": "^2.1.1",
+    "for-own": "^0.1.4",
     "gulp-format-md": "^0.1.9",
     "minimatch": "^3.0.0",
     "minimist": "^1.2.0",
     "mocha": "^2.4.5",
+    "os-homedir": "^1.0.1",
     "should": "^8.3.1"
   },
   "keywords": [
@@ -41,6 +47,7 @@
   ],
   "verb": {
     "related": {
+      "highlight": "micromatch",
       "list": [
         "braces",
         "expand-brackets",
@@ -61,8 +68,9 @@
       "reflinks": true
     },
     "reflinks": [
+      "micromatch",
       "verb",
-      "micromatch"
+      "minimatch"
     ]
   }
 }
