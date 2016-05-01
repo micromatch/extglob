@@ -12,7 +12,7 @@ function run(type) {
   var suite = new Suite({
     cwd: __dirname,
     fixtures: path.join('fixtures', type,'*.js'),
-    code: path.join('code', type + '.*.js')
+    code: path.join('code', '*.js')
   });
 
   if (argv.dry) {
