@@ -1,9 +1,11 @@
 'use strict';
 
+var util = require('util');
 var extend = require('extend-shallow');
+var isExtglob = require('is-extglob');
 var renderer = require('./lib/renderer');
 var parser = require('./lib/parser');
-var utils = require('./lib/utils');
+var extglobCache = {};
 var makeReCache = {};
 var regexCache = {};
 
@@ -24,39 +26,67 @@ var regexCache = {};
 
 function extglob(pattern, options) {
   var opts = extend({}, options);
-  if (opts.noextglob === true) {
-    return pattern;
+  var key = pattern;
+  var close = '$';
+  var open = '^';
+  var res;
+
+  for (var prop in opts) {
+    if (opts.hasOwnProperty(prop)) {
+      key += ':' + prop + ':' + String(opts[prop]);
+    }
   }
 
-  if (opts.literal === true) {
-    return escapeRe(pattern);
+  if (extglobCache.hasOwnProperty(key)) {
+    return extglobCache[key];
+  }
+
+  if (opts.literal === true || opts.noextglob === true) {
+    return escapeRegex(pattern);
+  }
+
+  if (pattern.charAt(0) === '^') {
+    pattern = pattern.slice(1);
+  }
+
+  if (pattern.slice(-1) === '$') {
+    pattern = pattern.slice(0, pattern.length -1);
+  }
+
+  var isExtglobPattern = isExtglob(pattern);
+  if (!isExtglobPattern && opts.strictExtglob === true) {
+    return (extglobCache[pattern] = escapeRegex(pattern));
   }
 
   var ast = extglob.parse(pattern, opts);
   var res = extglob.render(ast, opts);
 
-  if (ast.hasOwnProperty('strictopen')) {
-    opts.strictopen = ast.strictopen;
+  if (ast.strictopen === false || opts.strictopen === false) {
+    open = '';
   }
 
-  if (ast.hasOwnProperty('strictclose')) {
-    opts.strictclose = ast.strictclose;
+  if (ast.strictclose === false || opts.strictclose === false) {
+    close = '';
   }
 
-  var open = opts.strictopen === false ? '' : '^';
-  var close = opts.strictclose === false ? '' : '$';
-  return open + ast.prefix + res.rendered + close;
+  var rendered = open + ast.prefix + res.rendered + close;
+  return (extglobCache[pattern] = rendered);
 }
 
 /**
- * Expose parser and render methods
+ * Expose parse methods
  */
 
 extglob.parser = parser;
 extglob.parse = parser.parse;
+
+/**
+ * Expose render methods
+ */
+
 extglob.renderer = renderer;
-extglob.stringify = renderer.stringify;
 extglob.render = renderer.render;
+extglob.stringify = renderer.stringify;
 
 /**
  * Create a regular expression from the given extglob `pattern`.
@@ -92,7 +122,7 @@ extglob.makeRe = function(pattern, options) {
   }
 
   var re = !(pattern instanceof RegExp)
-    ? regex(extglob(pattern, opts), opts)
+    ? toRegex(extglob(pattern, opts), opts)
     : pattern;
 
   makeReCache[key] = re;
@@ -171,6 +201,7 @@ extglob.match = function(arr, pattern, options) {
   var len = arr.length;
   var idx = -1;
   var res = [];
+
   while (++idx < len) {
     var ele = arr[idx];
     if (isMatch(ele)) {
@@ -181,7 +212,6 @@ extglob.match = function(arr, pattern, options) {
   if (res.length === 0 && opts.nonull === true) {
     return [pattern];
   }
-
   return res;
 };
 
@@ -189,7 +219,7 @@ extglob.match = function(arr, pattern, options) {
  * Create a regex from the given `string` and `options`
  */
 
-function regex(str, options) {
+function toRegex(str, options) {
   var opts = extend({}, options);
   var key = str;
   for (var prop in opts) {
@@ -211,9 +241,11 @@ function regex(str, options) {
  * Escape regex characters in the given string
  */
 
-function escapeRe(str) {
-  str = str.split('\\').join('');
-  return str.replace(/[|{}()[\]^$+*?.]/g, '\\$&');
+function escapeRegex(str) {
+  if (typeof str === 'string') {
+    return str.split('\\').join('').replace(/[|{}()\[\]$+*?.^`~&]/g, '\\$&');
+  }
+  throw new TypeError('expected a string: ' + util.format(str));
 }
 
 /**
