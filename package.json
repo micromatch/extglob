@@ -29,7 +29,11 @@
     "delete": "^0.3.1",
     "export-files": "^2.1.1",
     "for-own": "^0.1.4",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^2.0.0",
     "gulp-format-md": "^0.1.9",
+    "gulp-istanbul": "^0.10.4",
+    "gulp-mocha": "^2.2.0",
     "minimatch": "^3.0.0",
     "minimist": "^1.2.0",
     "mocha": "^2.4.5",
@@ -46,6 +50,14 @@
     "wildcard"
   ],
   "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
     "related": {
       "highlight": "micromatch",
       "list": [
@@ -56,21 +68,13 @@
         "micromatch"
       ]
     },
-    "toc": false,
-    "layout": "default",
-    "tasks": [
-      "readme"
-    ],
-    "plugins": [
-      "gulp-format-md"
-    ],
-    "lint": {
-      "reflinks": true
-    },
     "reflinks": [
       "micromatch",
       "verb",
       "minimatch"
-    ]
+    ],
+    "lint": {
+      "reflinks": true
+    }
   }
 }
