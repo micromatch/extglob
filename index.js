@@ -53,11 +53,6 @@ function extglob(pattern, options) {
     pattern = pattern.slice(0, pattern.length -1);
   }
 
-  var isExtglobPattern = isExtglob(pattern);
-  if (!isExtglobPattern && opts.strictExtglob) {
-    return (extglobCache[key] = escapeRegex(pattern));
-  }
-
   var ast = extglob.parse(pattern, opts);
   var res = extglob.render(ast, opts);
 
