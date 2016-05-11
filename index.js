@@ -1,177 +1,255 @@
-/*!
- * extglob <https://github.com/jonschlinkert/extglob>
- *
- * Copyright (c) 2015, Jon Schlinkert.
- * Licensed under the MIT License.
- */
-
 'use strict';
 
+var util = require('util');
+var extend = require('extend-shallow');
+var isExtglob = require('is-extglob');
+var renderer = require('./lib/renderer');
+var parser = require('./lib/parser');
+var extglobCache = {};
+var makeReCache = {};
+var regexCache = {};
+
 /**
- * Module dependencies
+ * Convert the given `extglob` pattern into a regex-compatible string.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * var str = extglob('*.!(*a)');
+ * console.log(str);
+ * //=> "[^/]*?\.(?![^/]*?a)[^/]*?"
+ * ```
+ * @param {String} `str`
+ * @param {Object} `options`
+ * @return {String}
+ * @api public
  */
 
-var re, cache = {};
+function extglob(pattern, options) {
+  var opts = extend({}, options);
+  var key = pattern;
+  var close = '$';
+  var open = '^';
+  var res;
+
+  for (var prop in opts) {
+    if (opts.hasOwnProperty(prop)) {
+      key += ':' + prop + ':' + String(opts[prop]);
+    }
+  }
+
+  if (extglobCache.hasOwnProperty(key)) {
+    return extglobCache[key];
+  }
+
+  if (opts.noextglob === true) {
+    return (extglobCache[key] = escapeRegex(pattern));
+  }
+
+  if (pattern.charAt(0) === '^') {
+    pattern = pattern.slice(1);
+  }
+
+  if (pattern.slice(-1) === '$') {
+    pattern = pattern.slice(0, pattern.length -1);
+  }
+
+  var ast = extglob.parse(pattern, opts);
+  var res = extglob.render(ast, opts);
+
+  if (ast.strictopen === false || opts.strictopen === false) {
+    open = '';
+  }
+
+  if (ast.strictclose === false || opts.strictclose === false) {
+    close = '';
+  }
+
+  var rendered = open + ast.prefix + res.rendered + close;
+  return (extglobCache[key] = rendered);
+};
+
+/**
+ * Expose parse methods
+ */
+
+extglob.parser = parser;
+extglob.parse = parser.parse;
+
+/**
+ * Expose render methods
+ */
+
+extglob.renderer = renderer;
+extglob.render = renderer.render;
+extglob.stringify = renderer.stringify;
+
+/**
+ * Takes an array of strings and an extglob pattern and returns a new
+ * array that contains only the strings that match the pattern.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * console.log(extglob.match(['a.a', 'a.b', 'a.c'], '*.!(*a)'));
+ * //=> ['a.b', 'a.c']
+ * ```
+ * @param {Array} `arr` Array of strings to match
+ * @param {String} `pattern` Extglob pattern
+ * @param {Object} `options`
+ * @return {Array}
+ * @api public
+ */
+
+extglob.match = function(arr, pattern, options) {
+  arr = [].concat(arr);
+  var opts = extend({}, options);
+  var isMatch = extglob.matcher(pattern, opts);
+  var len = arr.length;
+  var idx = -1;
+  var res = [];
+
+  while (++idx < len) {
+    var ele = arr[idx];
+    if (isMatch(ele)) {
+      res.push(ele);
+    }
+  }
+
+  if (res.length === 0) {
+    if (opts.failglob === true) {
+      throw new Error('no matches found for "' + pattern + '"');
+    }
+    if (opts.nonull === true || opts.nullglob === true) {
+      return [pattern.split('\\').join('')];
+    }
+  }
+  return res;
+};
+
+/**
+ * Returns true if the specified `string` matches the given
+ * extglob `pattern`.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ *
+ * console.log(extglob.isMatch('a.a', '*.!(*a)'));
+ * //=> false
+ * console.log(extglob.isMatch('a.b', '*.!(*a)'));
+ * //=> true
+ * ```
+ * @param {String} `string` String to match
+ * @param {String} `pattern` Extglob pattern
+ * @param {String} `options`
+ * @return {Boolean}
+ * @api public
+ */
+
+extglob.isMatch = function(str, pattern, options) {
+  return extglob.makeRe(pattern, options).test(str);
+};
+
+/**
+ * Takes an extglob pattern and returns a matcher function. The returned
+ * function takes the string to match as its only argument.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * var isMatch = extglob.matcher('*.!(*a)');
+ *
+ * console.log(isMatch('a.a'));
+ * //=> false
+ * console.log(isMatch('a.b'));
+ * //=> true
+ * ```
+ * @param {String} `pattern` Extglob pattern
+ * @param {String} `options`
+ * @return {Boolean}
+ * @api public
+ */
+
+extglob.matcher = function(pattern, options) {
+  var re = extglob.makeRe(pattern, options);
+  return function(str) {
+    return re.test(str);
+  };
+};
+
+/**
+ * Create a regular expression from the given extglob `pattern`.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * var re = extglob.makeRe('*.!(*a)');
+ * console.log(re);
+ * //=> /^[^\/]*?\.(?![^\/]*?a)[^\/]*?$/
+ * ```
+ * @param {String} `pattern` The extglob pattern to convert
+ * @param {Object} `options`
+ * @return {RegExp}
+ * @api public
+ */
+
+extglob.makeRe = function(pattern, options) {
+  var opts = extend({}, options);
+  var key = pattern;
+
+  if (/[*+]$/.test(pattern)) {
+    opts.strictclose = false;
+  }
+
+  for (var prop in opts) {
+    if (opts.hasOwnProperty(prop)) {
+      key += ':' + prop + ':' + String(opts[prop]);
+    }
+  }
+
+  if (makeReCache.hasOwnProperty(key)) {
+    return makeReCache[key];
+  }
+
+  var re = !(pattern instanceof RegExp)
+    ? toRegex(extglob(pattern, opts), opts)
+    : pattern;
+
+  makeReCache[key] = re;
+  return re;
+};
+
+/**
+ * Create a regex from the given `string` and `options`
+ */
+
+function toRegex(str, options) {
+  var opts = extend({}, options);
+  var key = str;
+  for (var prop in opts) {
+    if (opts.hasOwnProperty(prop)) {
+      key += ':' + prop + ':' + String(opts[prop]);
+    }
+  }
+
+  if (regexCache.hasOwnProperty(key)) {
+    return regexCache[key];
+  }
+
+  var re = new RegExp(str, opts.flags);
+  regexCache[key] = re;
+  return re;
+}
+
+/**
+ * Escape regex characters in the given string
+ */
+
+function escapeRegex(str) {
+  if (typeof str === 'string') {
+    return str.split('\\').join('').replace(/[-|$,\\#\s{}()\[\]+*?`~&.^]/g, '\\$&');
+  }
+  throw new TypeError('expected a string: ' + util.format(str));
+}
 
 /**
  * Expose `extglob`
  */
 
 module.exports = extglob;
-
-/**
- * Convert the given extglob `string` to a regex-compatible
- * string.
- *
- * ```js
- * var extglob = require('extglob');
- * extglob('!(a?(b))');
- * //=> '(?!a(?:b)?)[^/]*?'
- * ```
- *
- * @param {String} `str` The string to convert.
- * @param {Object} `options`
- *   @option {Boolean} [options] `esc` If `false` special characters will not be escaped. Defaults to `true`.
- *   @option {Boolean} [options] `regex` If `true` a regular expression is returned instead of a string.
- * @return {String}
- * @api public
- */
-
-
-function extglob(str, opts) {
-  opts = opts || {};
-  var o = {}, i = 0;
-
-  // fix common character reversals
-  // '*!(.js)' => '*.!(js)'
-  str = str.replace(/!\(([^\w*()])/g, '$1!(');
-
-  // support file extension negation
-  str = str.replace(/([*\/])\.!\([*]\)/g, function (m, ch) {
-    if (ch === '/') {
-      return escape('\\/[^.]+');
-    }
-    return escape('[^.]+');
-  });
-
-  // create a unique key for caching by
-  // combining the string and options
-  var key = str
-    + String(!!opts.regex)
-    + String(!!opts.contains)
-    + String(!!opts.escape);
-
-  if (cache.hasOwnProperty(key)) {
-    return cache[key];
-  }
-
-  if (!(re instanceof RegExp)) {
-    re = regex();
-  }
-
-  opts.negate = false;
-  var m;
-
-  while (m = re.exec(str)) {
-    var prefix = m[1];
-    var inner = m[3];
-    if (prefix === '!') {
-      opts.negate = true;
-    }
-
-    var id = '__EXTGLOB_' + (i++) + '__';
-    // use the prefix of the _last_ (outtermost) pattern
-    o[id] = wrap(inner, prefix, opts.escape);
-    str = str.split(m[0]).join(id);
-  }
-
-  var keys = Object.keys(o);
-  var len = keys.length;
-
-  // we have to loop again to allow us to convert
-  // patterns in reverse order (starting with the
-  // innermost/last pattern first)
-  while (len--) {
-    var prop = keys[len];
-    str = str.split(prop).join(o[prop]);
-  }
-
-  var result = opts.regex
-    ? toRegex(str, opts.contains, opts.negate)
-    : str;
-
-  result = result.split('.').join('\\.');
-
-  // cache the result and return it
-  return (cache[key] = result);
-}
-
-/**
- * Convert `string` to a regex string.
- *
- * @param  {String} `str`
- * @param  {String} `prefix` Character that determines how to wrap the string.
- * @param  {Boolean} `esc` If `false` special characters will not be escaped. Defaults to `true`.
- * @return {String}
- */
-
-function wrap(inner, prefix, esc) {
-  if (esc) inner = escape(inner);
-
-  switch (prefix) {
-    case '!':
-      return '(?!' + inner + ')[^/]' + (esc ? '%%%~' : '*?');
-    case '@':
-      return '(?:' + inner + ')';
-    case '+':
-      return '(?:' + inner + ')+';
-    case '*':
-      return '(?:' + inner + ')' + (esc ? '%%' : '*')
-    case '?':
-      return '(?:' + inner + '|)';
-    default:
-      return inner;
-  }
-}
-
-function escape(str) {
-  str = str.split('*').join('[^/]%%%~');
-  str = str.split('.').join('\\.');
-  return str;
-}
-
-/**
- * extglob regex.
- */
-
-function regex() {
-  return /(\\?[@?!+*$]\\?)(\(([^()]*?)\))/;
-}
-
-/**
- * Negation regex
- */
-
-function negate(str) {
-  return '(?!^' + str + ').*$';
-}
-
-/**
- * Create the regex to do the matching. If
- * the leading character in the `pattern` is `!`
- * a negation regex is returned.
- *
- * @param {String} `pattern`
- * @param {Boolean} `contains` Allow loose matching.
- * @param {Boolean} `isNegated` True if the pattern is a negation pattern.
- */
-
-function toRegex(pattern, contains, isNegated) {
-  var prefix = contains ? '^' : '';
-  var after = contains ? '$' : '';
-  pattern = ('(?:' + pattern + ')' + after);
-  if (isNegated) {
-    pattern = prefix + negate(pattern);
-  }
-  return new RegExp(prefix + pattern);
-}

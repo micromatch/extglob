@@ -11,3 +11,4 @@ test/actual
 tmp
 TODO.md
 vendor
+coverage

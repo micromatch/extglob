@@ -1,16 +1,10 @@
 {
   "name": "extglob",
-  "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
+  "description": "Adds (almost) the expressive power of regular expressions to glob patterns!",
   "version": "0.3.2",
   "homepage": "https://github.com/jonschlinkert/extglob",
-  "author": {
-    "name": "Jon Schlinkert",
-    "url": "https://github.com/jonschlinkert"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jonschlinkert/extglob.git"
-  },
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/extglob",
   "bugs": {
     "url": "https://github.com/jonschlinkert/extglob/issues"
   },
@@ -25,15 +19,26 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {},
+  "dependencies": {
+    "extend-shallow": "^2.0.1",
+    "is-extglob": "^1.0.0",
+    "snapdragon": "^0.4.2"
+  },
   "devDependencies": {
-    "ansi-green": "^0.1.1",
-    "micromatch": "^2.1.6",
-    "minimatch": "^2.0.1",
-    "minimist": "^1.1.0",
-    "mocha": "*",
-    "should": "*",
-    "success-symbol": "^0.1.0"
+    "cross-spawn-async": "^2.2.2",
+    "delete": "^0.3.1",
+    "export-files": "^2.1.1",
+    "for-own": "^0.1.4",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^2.0.0",
+    "gulp-format-md": "^0.1.9",
+    "gulp-istanbul": "^0.10.4",
+    "gulp-mocha": "^2.2.0",
+    "minimatch": "^3.0.0",
+    "minimist": "^1.2.0",
+    "mocha": "^2.4.5",
+    "os-homedir": "^1.0.1",
+    "should": "^8.3.1"
   },
   "keywords": [
     "bash",
@@ -45,14 +50,31 @@
     "wildcard"
   ],
   "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
     "related": {
+      "highlight": "micromatch",
       "list": [
-        "micromatch",
-        "expand-brackets",
         "braces",
+        "expand-brackets",
+        "expand-range",
         "fill-range",
-        "expand-range"
+        "micromatch"
       ]
+    },
+    "reflinks": [
+      "micromatch",
+      "verb",
+      "minimatch"
+    ],
+    "lint": {
+      "reflinks": true
     }
   }
 }
