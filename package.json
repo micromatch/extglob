@@ -3,20 +3,21 @@
   "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
   "version": "0.3.2",
   "homepage": "https://github.com/jonschlinkert/extglob",
-  "author": {
-    "name": "Jon Schlinkert",
-    "url": "https://github.com/jonschlinkert"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jonschlinkert/extglob.git"
-  },
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "contributors": [
+    "Isiah Meadows <me@isiahmeadows.com> (https://www.isiahmeadows.com)",
+    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)",
+    "Shinnosuke Watanabe <snnskwtnb@gmail.com> (https://shinnn.github.io)"
+  ],
+  "repository": "jonschlinkert/extglob",
   "bugs": {
     "url": "https://github.com/jonschlinkert/extglob/issues"
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "LICENSE",
+    "README.md"
   ],
   "main": "index.js",
   "engines": {
@@ -47,11 +48,11 @@
   "verb": {
     "related": {
       "list": [
-        "micromatch",
-        "expand-brackets",
         "braces",
+        "expand-brackets",
+        "expand-range",
         "fill-range",
-        "expand-range"
+        "micromatch"
       ]
     }
   }
