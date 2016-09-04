@@ -1,16 +1,16 @@
-# extglob [![NPM version](https://badge.fury.io/js/extglob.svg)](http://badge.fury.io/js/extglob)  [![Build Status](https://travis-ci.org/jonschlinkert/extglob.svg)](https://travis-ci.org/jonschlinkert/extglob)
+# extglob [![NPM version](https://img.shields.io/npm/v/extglob.svg?style=flat)](https://www.npmjs.com/package/extglob) [![NPM downloads](https://img.shields.io/npm/dm/extglob.svg?style=flat)](https://npmjs.org/package/extglob) [![Build Status](https://img.shields.io/travis/jonschlinkert/extglob.svg?style=flat)](https://travis-ci.org/jonschlinkert/extglob)
 
-> Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.
+> Extended glob support for JavaScript. Adds (almost) the expressive power of regular expressions to glob patterns.
 
-Install with [npm](https://www.npmjs.com/)
+## Install
+
+Install with [npm](https://www.npmjs.com/):
 
 ```sh
-$ npm i extglob --save
+$ npm install --save extglob
 ```
 
-Used by [micromatch](https://github.com/jonschlinkert/micromatch).
-
-**Features**
+## Features
 
 * Convert an extglob string to a regex-compatible string. **Only converts extglobs**, to handle full globs use [micromatch](https://github.com/jonschlinkert/micromatch).
 * Pass `{regex: true}` to return a regex
@@ -21,24 +21,7 @@ Used by [micromatch](https://github.com/jonschlinkert/micromatch).
 
 ```js
 var extglob = require('extglob');
-
-extglob('?(z)');
-//=> '(?:z)?'
-extglob('*(z)');
-//=> '(?:z)*'
-extglob('+(z)');
-//=> '(?:z)+'
-extglob('@(z)');
-//=> '(?:z)'
-extglob('!(z)');
-//=> '(?!^(?:(?!z)[^/]*?)).*$'
-```
-
-**Optionally return regex**
-
-```js
-extglob('!(z)', {regex: true});
-//=> /(?!^(?:(?!z)[^/]*?)).*$/
+console.log(extglob('abc/!(xyz)*.js'));
 ```
 
 ## Extglob patterns
@@ -51,38 +34,50 @@ To learn more about how extglobs work, see the docs for [Bash pattern matching](
 * `@(pattern)`: Match one of the given pattern.
 * `!(pattern)`: Match anything except one of the given pattern.
 
-## Related
+## About
 
-* [braces](https://github.com/jonschlinkert/braces): Fastest brace expansion for node.js, with the most complete support for the Bash 4.3 braces… [more](https://github.com/jonschlinkert/braces)
-* [expand-brackets](https://github.com/jonschlinkert/expand-brackets): Expand POSIX bracket expressions (character classes) in glob patterns.
-* [expand-range](https://github.com/jonschlinkert/expand-range): Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. See… [more](https://github.com/jonschlinkert/expand-range)
-* [fill-range](https://github.com/jonschlinkert/fill-range): Fill in a range of numbers or letters, optionally passing an increment or multiplier to… [more](https://github.com/jonschlinkert/fill-range)
-* [micromatch](https://github.com/jonschlinkert/micromatch): Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch. Just… [more](https://github.com/jonschlinkert/micromatch)
+### Related projects
 
-## Run tests
+* [braces](https://www.npmjs.com/package/braces): Fastest brace expansion for node.js, with the most complete support for the Bash 4.3 braces… [more](https://github.com/jonschlinkert/braces) | [homepage](https://github.com/jonschlinkert/braces "Fastest brace expansion for node.js, with the most complete support for the Bash 4.3 braces specification.")
+* [expand-brackets](https://www.npmjs.com/package/expand-brackets): Expand POSIX bracket expressions (character classes) in glob patterns. | [homepage](https://github.com/jonschlinkert/expand-brackets "Expand POSIX bracket expressions (character classes) in glob patterns.")
+* [expand-range](https://www.npmjs.com/package/expand-range): Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. See… [more](https://github.com/jonschlinkert/expand-range) | [homepage](https://github.com/jonschlinkert/expand-range "Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. See the benchmarks. Used by micromatch.")
+* [fill-range](https://www.npmjs.com/package/fill-range): Fill in a range of numbers or letters, optionally passing an increment or multiplier to… [more](https://github.com/jonschlinkert/fill-range) | [homepage](https://github.com/jonschlinkert/fill-range "Fill in a range of numbers or letters, optionally passing an increment or multiplier to use.")
+* [micromatch](https://www.npmjs.com/package/micromatch): Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch. | [homepage](https://github.com/jonschlinkert/micromatch "Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch.")
+
+### Contributing
+
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
+
+### Building docs
+
+_(This document was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme) (a [verb](https://github.com/verbose/verb) generator), please don't edit the readme directly. Any changes to the readme must be made in [.verb.md](.verb.md).)_
+
+To generate the readme and API documentation with [verb](https://github.com/verbose/verb):
+
+```sh
+$ npm install -g verb verb-generate-readme && verb
+```
+
+### Running tests
 
 Install dev dependencies:
 
 ```sh
-$ npm i -d && npm test
+$ npm install -d && npm test
 ```
 
-## Contributing
-
-Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/jonschlinkert/extglob/issues/new)
-
-## Author
+### Author
 
 **Jon Schlinkert**
 
-+ [github/jonschlinkert](https://github.com/jonschlinkert)
-+ [twitter/jonschlinkert](http://twitter.com/jonschlinkert)
+* [github/jonschlinkert](https://github.com/jonschlinkert)
+* [twitter/jonschlinkert](http://twitter.com/jonschlinkert)
 
-## License
+### License
 
-Copyright © 2015 Jon Schlinkert
-Released under the MIT license.
+Copyright © 2016, [Jon Schlinkert](https://github.com/jonschlinkert).
+Released under the [MIT license](https://github.com/jonschlinkert/extglob/blob/master/LICENSE).
 
 ***
 
-_This file was generated by [verb-cli](https://github.com/assemble/verb-cli) on August 01, 2015._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.1.30, on September 04, 2016._

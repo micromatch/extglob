@@ -1,6 +1,6 @@
 {
   "name": "extglob",
-  "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
+  "description": "Extended glob support for JavaScript. Adds (almost) the expressive power of regular expressions to glob patterns.",
   "version": "0.3.2",
   "homepage": "https://github.com/jonschlinkert/extglob",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -26,14 +26,14 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {},
   "devDependencies": {
     "ansi-green": "^0.1.1",
-    "micromatch": "^2.1.6",
-    "minimatch": "^2.0.1",
-    "minimist": "^1.1.0",
-    "mocha": "*",
-    "should": "*",
+    "gulp-format-md": "^0.1.10",
+    "micromatch": "^2.3.11",
+    "minimatch": "^3.0.3",
+    "minimist": "^1.2.0",
+    "mocha": "^3.0.2",
+    "should": "^11.1.0",
     "success-symbol": "^0.1.0"
   },
   "keywords": [
@@ -46,6 +46,11 @@
     "wildcard"
   ],
   "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
     "related": {
       "list": [
         "braces",
@@ -54,6 +59,16 @@
         "fill-range",
         "micromatch"
       ]
-    }
+    },
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
+    },
+    "reflinks": [
+      "verb",
+      "verb-generate-readme"
+    ]
   }
 }
