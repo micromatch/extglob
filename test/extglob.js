@@ -186,24 +186,11 @@ describe('extglobs', function() {
     match(arr, 'a.*c', ['a.c', 'a.xy.zc', 'a.zc']);
     match(arr, 'a*c', ['a c', 'a.c', 'a1c', 'a123c', 'abbbbc', 'abbbc', 'abbc', 'abc', 'axyzc', 'axy zc', 'axy.zc', 'a.xy.zc', 'a.zc']);
     match(arr, 'a\\w+c', ['a1c', 'a123c', 'abbbbc', 'abbbc', 'abbc', 'abc', 'axyzc'], 'Should match word characters');
-    match(arr, 'a[a-z]+c', ['abbbbc', 'abbbc', 'abbc', 'abc', 'axyzc'], 'Should match word characters');
     match(arr, 'a\\W+c', ['a.c', 'a c'], 'Should match non-word characters');
     match(arr, 'a\\d+c', ['a1c', 'a123c'], 'Should match numbers');
     match(['foo@#$%123ASD #$$%^&', 'foo!@#$asdfl;', '123'], '\\d+', ['123']);
     match(['a123c', 'abbbc'], 'a\\D+c', ['abbbc'], 'Should match non-numbers');
     match(['foo', ' foo '], '(f|o)+\\b', ['foo'], 'Should match word boundaries');
-    match(['abc', 'abd'], 'a[bc]d', ['abd'], 'Should match character classes');
-    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[b-d]e', ['ace'], 'Should match character class alphabetical ranges');
-    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[b-d]', ['ac'], 'Should match character class alphabetical ranges');
-    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[-c]', ['a-', 'ac'], 'Should match character classes with leading dashes');
-    match(['abc', 'abd', 'ace', 'ac', 'a-'], 'a[c-]', ['a-', 'ac'], 'Should match character classes with trailing dashes');
-    match(['a]c', 'abd', 'ace', 'ac', 'a-'], 'a[]]c', ['a]c'], 'Should match bracket literals in character classes');
-    match(['a]', 'abd', 'ace', 'ac', 'a-'], 'a]', ['a]'], 'Should match bracket literals');
-    match(['a]', 'acd', 'aed', 'ac', 'a-'], 'a[^bc]d', ['aed'], 'Should negation patterns in character classes');
-    match(['adc', 'a-c'], 'a[^-b]c', ['adc'], 'Should match negated dashes in character classes');
-    // match(['adc', 'a]c'], 'a[^]b]c', ['adc'], 'Should match negated brackets in character classes');
-    // match(['01234', '0123e456', '0123e45g78'], '[\\de]+', ['01234', '0123e456', '0123e45g78'], 'Should match alpha-numeric characters in character classes');
-    // match(['01234', '0123e456', '0123e45g78'], '[e\\d]+', ['01234', '0123e456', '0123e45g78'], 'Should match alpha-numeric characters in character classes');
   });
 });
 
