@@ -27,7 +27,6 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "brace-expansion": "^1.1.6",
     "cross-spawn": "^4.0.0",
     "delete": "^0.3.2",
     "for-own": "^0.1.4",
@@ -35,7 +34,6 @@
     "micromatch": "^2.3.11",
     "minimatch": "^3.0.3",
     "mocha": "^3.0.2",
-    "should": "^11.1.0",
     "yargs-parser": "^3.2.0"
   },
   "keywords": [
@@ -78,6 +76,8 @@
     "define-property": "^0.2.5",
     "export-files": "^2.1.1",
     "extend-shallow": "^2.0.1",
-    "repeat-string": "^1.5.4"
+    "source-map": "^0.5.6",
+    "source-map-resolve": "^0.5.0",
+    "urix": "^0.1.0"
   }
 }

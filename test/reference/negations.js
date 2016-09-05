@@ -77,8 +77,8 @@ module.exports = {
     },
 
     'foo.js.js': {
-      '*.!(js)': true,
-      '*.!(js)*': true,
+      '*.!(js)': false, // Bash 4.3 disagrees!
+      '*.!(js)*': false, // Bash 4.3 disagrees!
       '*.!(js)+': false,
       '*.!(js)*.!(js)': false,
     },
@@ -91,10 +91,8 @@ module.exports = {
     },
 
     'foojs.js': {
-      // extglob gets this one right, minimatch doesn't
-      '*(*.json|!(*.js))': true,
-      // '*(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
-      '+(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
+      '*(*.json|!(*.js))': false,
+      '+(*.json|!(*.js))': false,
       '@(*.json|!(*.js))': false,
       '?(*.json|!(*.js))': false
     },

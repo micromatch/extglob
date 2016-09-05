@@ -18,9 +18,8 @@ function match(arr, pattern, expected, options) {
  * unit tests.
  */
 
-
 describe('extglobs', function() {
-  it.skip('failing: bash disagrees', function() {
+  it.skip('Bash 4.3 disagrees!', function() {
     match(['foo'], '*(!(foo))', ['foo']);
     match(['foo', 'bar', 'baz', 'foobar'], '!(foo)*', ['foo', 'bar', 'baz', 'foobar']);
     match(['moo.cow', 'mad.moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
@@ -175,6 +174,7 @@ describe('extglobs', function() {
     match(arr, 'a/b', ['a/b']);
   });
 
+  // these are not extglobs, and do not need to pass. these tests will be moved to `expand-brackets`
   it('should match common regex patterns', function() {
     var arr = ['a c', 'a1c', 'a123c', 'a.c', 'a.xy.zc', 'a.zc', 'abbbbc', 'abbbc', 'abbc', 'abc', 'abq', 'axy zc', 'axy', 'axy.zc', 'axyzc'];
 

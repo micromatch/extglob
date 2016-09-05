@@ -1,11 +1,10 @@
 'use strict';
 
-var Extglob = require('./');
+var parsers = require('../lib/parsers');
+var Extglob = require('../lib/extglob');
 var extglob = new Extglob();
+extglob.use(parsers);
 
-var pattern = '**/{a,b,/{c,d}}/*.js';
-// var pattern = '**/foo/*.js';
-
-// var res = extglob(pattern);
+var pattern = '*(*(of*(a)x)z)';
 var res = extglob.parse(pattern);
-// console.log(res);
+console.log(res);

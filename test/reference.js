@@ -5,7 +5,7 @@ var util = require('util');
 var argv = require('yargs-parser')(process.argv.slice(2));
 var assert = require('assert');
 var forOwn = require('for-own');
-var minimatch = require('./minimatch');
+var reference = require('./reference/');
 var extglob = require('..');
 var isMatch = extglob.isMatch;
 
@@ -16,7 +16,7 @@ if (argv.mm) {
 describe('running extglob against minimatch tests', function() {
   describe('extglobs', function() {
     describe('negations', function() {
-      var negations = minimatch.negations;
+      var negations = reference.negations;
       forOwn(negations.cases, function(val, str) {
         describe('"' + str + '"', function() {
           var i = 0;
