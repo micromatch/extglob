@@ -27,14 +27,16 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "ansi-green": "^0.1.1",
+    "brace-expansion": "^1.1.6",
+    "cross-spawn": "^4.0.0",
+    "delete": "^0.3.2",
+    "for-own": "^0.1.4",
     "gulp-format-md": "^0.1.10",
     "micromatch": "^2.3.11",
     "minimatch": "^3.0.3",
-    "minimist": "^1.2.0",
     "mocha": "^3.0.2",
     "should": "^11.1.0",
-    "success-symbol": "^0.1.0"
+    "yargs-parser": "^3.2.0"
   },
   "keywords": [
     "bash",
@@ -70,5 +72,12 @@
       "verb",
       "verb-generate-readme"
     ]
+  },
+  "dependencies": {
+    "debug": "^2.2.0",
+    "define-property": "^0.2.5",
+    "export-files": "^2.1.1",
+    "extend-shallow": "^2.0.1",
+    "repeat-string": "^1.5.4"
   }
 }
