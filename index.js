@@ -155,19 +155,6 @@ extglob.makeRe = function(pattern, options) {
     return makeReCache[key];
   }
 
-  // if (/^[*+?](?!\()/.test(pattern)) {
-  //   opts.strictOpen = true;
-  // }
-
-  // if (/[*+]$/.test(pattern) || pattern.charAt(0) === '*') {
-  //   opts.strictClose = false;
-  // }
-
-  // opts.isNegated = pattern.charAt(0) === '!';
-  // if (opts.isNegated) {
-  //   pattern = pattern.slice(1);
-  // }
-
   var res = extglob(pattern, opts);
   var re = typeof pattern === 'string'
     ? toRegex(res.output, opts)
@@ -194,16 +181,13 @@ function toRegex(pattern, options) {
     return regexCache[key];
   }
 
-  var open = opts.strictOpen === false ? '' : '^';
-  var close = opts.strictClose === false ? '' : '$';
   var flags = opts.flags || '';
-
   if (opts.nocase === true) {
     flags += 'i';
   }
 
   try {
-    var res = open + `(?:${pattern})` + close;
+    var res = `^(?:${pattern})$`;
     if (opts.isNegated) {
       res = utils.not(res);
     }
