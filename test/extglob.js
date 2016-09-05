@@ -10,7 +10,7 @@ var isMatch = argv.mm ? minimatch : extglob.isMatch;
 
 function match(arr, pattern, expected, options) {
   var actual = matcher.match(arr, pattern, options);
-  assert.deepEqual(actual.sort(), expected.sort());
+  assert.deepEqual(actual.sort(), expected.sort(), extglob.makeRe(pattern));
 }
 
 /**
@@ -149,9 +149,15 @@ describe('extglobs', function() {
   });
 
   it('should match escaped parens', function() {
-    var arr = ['a(b', 'a((b', 'a((((b', 'ab'];
+    var arr = ['a(b', 'a\\(b', 'a((b', 'a((((b', 'ab'];
     match(arr, 'a(b', ['a(b']);
+    match(arr, 'a\\(b', ['a(b']);
     match(arr, 'a(*b', ['ab', 'a(b', 'a((b', 'a((((b']);
+  });
+
+  it('should match escaped slashes', function() {
+    var arr = ['a(b', 'a\\(b', 'a((b', 'a((((b', 'ab'];
+    match(arr, 'a\\\\(b', ['a\\(b']);
   });
 
   it('should throw on imbalanced sets when `options.strict` is true', function() {
