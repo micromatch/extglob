@@ -19,6 +19,10 @@ function match(arr, pattern, expected, options) {
  */
 
 describe('extglobs', function() {
+  it('should export a function', function() {
+    assert.equal(typeof extglob, 'function');
+  });
+
   it.skip('Bash 4.3 disagrees!', function() {
     match(['foo'], '*(!(foo))', ['foo']);
     match(['foo', 'bar', 'baz', 'foobar'], '!(foo)*', ['foo', 'bar', 'baz', 'foobar']);
