@@ -1,11 +1,11 @@
 'use strict';
 
-const extend = require('extend-shallow');
-const compilers = require('./lib/compilers');
-const parsers = require('./lib/parsers');
-const Extglob = require('./lib/extglob');
-const makeReCache = {};
-const regexCache = {};
+var extend = require('extend-shallow');
+var compilers = require('./lib/compilers');
+var parsers = require('./lib/parsers');
+var Extglob = require('./lib');
+var makeReCache = {};
+var regexCache = {};
 
 /**
  * Convert the given `extglob` pattern into a regex-compatible string.
@@ -14,7 +14,6 @@ const regexCache = {};
  * var extglob = require('extglob');
  * var str = extglob('*.!(*a)');
  * console.log(str);
- * //=> "[^/]*?\.(?![^/]*?a)[^/]*?"
  * ```
  * @param {String} `str`
  * @param {Object} `options`
@@ -30,9 +29,6 @@ function extglob(str, options) {
 
   var ast = matcher.parse(str);
   var res = matcher.compile(ast);
-  // console.log(ast)
-  // console.log(res)
-
   return res;
 }
 
@@ -182,12 +178,12 @@ function toRegex(pattern, options) {
   }
 
   var flags = opts.flags || '';
-  if (opts.nocase === true) {
+  if (opts.nocase === true && !/i/.test(flags)) {
     flags += 'i';
   }
 
   try {
-    var res = `^(?:${pattern})$`;
+    var res = '^(?:' + pattern + ')$';
     if (opts.isNegated) {
       res = utils.not(res);
     }
@@ -207,3 +203,18 @@ function toRegex(pattern, options) {
  */
 
 module.exports = extglob;
+
+/**
+ * Expose `Extglob` constructor
+ * @type {Function}
+ */
+
+module.exports.Extglob = Extglob;
+
+/**
+ * Expose `Compiler` and `Parser` constructors
+ * @type {Function}
+ */
+
+module.exports.Compiler = require('./lib/extglob/compiler');
+module.exports.Parser = require('./lib/extglob/parser');
