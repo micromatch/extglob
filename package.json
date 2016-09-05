@@ -16,6 +16,7 @@
   "license": "MIT",
   "files": [
     "index.js",
+    "lib",
     "LICENSE",
     "README.md"
   ],
@@ -25,6 +26,13 @@
   },
   "scripts": {
     "test": "mocha"
+  },
+  "dependencies": {
+    "debug": "^2.2.0",
+    "define-property": "^0.2.5",
+    "export-files": "^2.1.1",
+    "extend-shallow": "^2.0.1",
+    "snapdragon": "^0.5.0"
   },
   "devDependencies": {
     "cross-spawn": "^4.0.0",
@@ -41,8 +49,13 @@
     "extended",
     "extglob",
     "glob",
+    "globbing",
     "ksh",
     "match",
+    "pattern",
+    "patterns",
+    "regex",
+    "test",
     "wildcard"
   ],
   "verb": {
@@ -70,14 +83,5 @@
       "verb",
       "verb-generate-readme"
     ]
-  },
-  "dependencies": {
-    "debug": "^2.2.0",
-    "define-property": "^0.2.5",
-    "export-files": "^2.1.1",
-    "extend-shallow": "^2.0.1",
-    "source-map": "^0.5.6",
-    "source-map-resolve": "^0.5.0",
-    "urix": "^0.1.0"
   }
 }

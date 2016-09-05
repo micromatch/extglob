@@ -1,9 +1,10 @@
 'use strict';
 
-var extend = require('extend-shallow');
+var debug = require('debug')('extglob');
 var compilers = require('./lib/compilers');
 var parsers = require('./lib/parsers');
-var Extglob = require('./lib');
+var Extglob = require('./lib/extglob');
+var utils = require('./lib/utils');
 var makeReCache = {};
 var regexCache = {};
 
@@ -22,6 +23,7 @@ var regexCache = {};
  */
 
 function extglob(str, options) {
+  debug('initializing from <%s>', __filename);
   var matcher = new Extglob(options);
 
   matcher.use(compilers);
@@ -50,7 +52,7 @@ function extglob(str, options) {
 
 extglob.match = function(arr, pattern, options) {
   arr = [].concat(arr);
-  var opts = extend({}, options);
+  var opts = utils.extend({}, options);
   var isMatch = extglob.matcher(pattern, opts);
   var len = arr.length;
   var idx = -1;
@@ -139,7 +141,7 @@ extglob.matcher = function(pattern, options) {
  */
 
 extglob.makeRe = function(pattern, options) {
-  var opts = extend({}, options);
+  var opts = utils.extend({}, options);
   var key = pattern;
   for (var prop in opts) {
     if (opts.hasOwnProperty(prop)) {
@@ -165,7 +167,7 @@ extglob.makeRe = function(pattern, options) {
  */
 
 function toRegex(pattern, options) {
-  var opts = extend({}, options);
+  var opts = utils.extend({}, options);
   var key = pattern;
   for (var prop in opts) {
     if (opts.hasOwnProperty(prop)) {
@@ -210,11 +212,3 @@ module.exports = extglob;
  */
 
 module.exports.Extglob = Extglob;
-
-/**
- * Expose `Compiler` and `Parser` constructors
- * @type {Function}
- */
-
-module.exports.Compiler = require('./lib/extglob/compiler');
-module.exports.Parser = require('./lib/extglob/parser');
