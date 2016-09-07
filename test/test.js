@@ -14,13 +14,22 @@ function match(arr, pattern, expected, options) {
 }
 
 /**
- * These unit tests are converted directly from the bash 4.3 and 4.4
- * unit tests.
+ * These tests were converted directly from bash 4.3 and 4.4 unit tests.
  */
 
 describe('extglobs', function() {
   it('should export a function', function() {
     assert.equal(typeof extglob, 'function');
+  });
+
+  it('should throw on imbalanced sets when `options.strict` is true', function() {
+    assert.throws(function() {
+      isMatch('a((b', 'a(b', {strict: true});
+    }, 'row:1 col:2 missing opening parens: "a(b"');
+
+    assert.throws(function() {
+      isMatch('a((b', 'a(*b', {strict: true});
+    }, 'row:1 col:2 missing opening parens: "a(*b"');
   });
 
   it.skip('Bash 4.3 disagrees!', function() {
@@ -121,12 +130,14 @@ describe('extglobs', function() {
 
   it('tests derived from the pd-ksh test suite', function() {
     match(['abcx', 'abcz', 'bbc'], '!([[*])*', ['abcx', 'abcz', 'bbc']);
-    match(['abcx', 'abcz', 'bbc'], '[a*(]*z', ['abcz']);
     match(['abcx', 'abcz', 'bbc'], '+(a|b\\[)*', ['abcx', 'abcz']);
     match(['abd', 'acd'], 'a+(b|c)d', ['abd', 'acd']);
     match(['abd', 'acd', 'ac', 'ab'], 'a!(@(b|B))', ['acd', 'abd', 'ac']);
     match(['abd', 'acd'], 'a!(@(b|B))d', ['acd']);
     match(['abd', 'acd'], 'a[b*(foo|bar)]d', ['abd']);
+    // bash disagrees with this one. Bash says that `abcz` should match too.
+    // please create an issue to discuss if you agree with Bash.
+    match(['abcx', 'abcz', 'bbc', 'aaz', 'aaaz'], '[a*(]*z', ['aaz', 'aaaz']);
   });
 
   it('simple kleene star tests', function() {
@@ -156,32 +167,13 @@ describe('extglobs', function() {
     var arr = ['a(b', 'a\\(b', 'a((b', 'a((((b', 'ab'];
     match(arr, 'a(b', ['a(b']);
     match(arr, 'a\\(b', ['a(b']);
-    match(arr, 'a(*b', ['ab', 'a(b', 'a((b', 'a((((b']);
-  });
-
-  it('should match escaped slashes', function() {
-    var arr = ['a(b', 'a\\(b', 'a((b', 'a((((b', 'ab'];
-    match(arr, 'a\\\\(b', ['a\\(b']);
-  });
-
-  it('should throw on imbalanced sets when `options.strict` is true', function() {
-    assert.throws(function() {
-      isMatch('a((b', 'a(b', {strict: true});
-    }, 'row:1 col:2 missing opening parens: "a(b"');
-
-    assert.throws(function() {
-      isMatch('a((b', 'a(*b', {strict: true});
-    }, 'row:1 col:2 missing opening parens: "a(*b"');
+    match(arr, 'a(*b', ['a(b', 'a((b', 'a((((b']);
   });
 
   it('should match escaped backslashes', function() {
-    var arr = ['a\\b', 'a/b', 'ab'];
-    match(arr, 'a\\\\b', ['a\\b']);
-  });
-
-  it('should match escaped slashes', function() {
-    var arr = ['a\\b', 'a/b', 'ab'];
-    match(arr, 'a/b', ['a/b']);
+    match(['a(b', 'a\\(b', 'a((b', 'a((((b', 'ab'], 'a\\\\(b', ['a\\(b']);
+    match(['a\\b', 'a/b', 'ab'], 'a/b', ['a/b']);
+    match(['a\\b', 'a/b', 'ab'], 'a\\\\b', ['a\\b']);
   });
 
   // these are not extglobs, and do not need to pass. these tests will be moved to `expand-brackets`
