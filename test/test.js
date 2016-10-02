@@ -3,7 +3,7 @@
 var assert = require('assert');
 var argv = require('yargs-parser')(process.argv.slice(2));
 var minimatch = require('minimatch');
-var extglob = require('..');;
+var extglob = require('..');
 
 var matcher = argv.mm ? minimatch : extglob;
 var isMatch = argv.mm ? minimatch : extglob.isMatch;
@@ -22,13 +22,13 @@ describe('extglobs', function() {
     assert.equal(typeof extglob, 'function');
   });
 
-  it('should throw on imbalanced sets when `options.strict` is true', function() {
+  it('should throw on imbalanced sets when `options.strictErrors` is true', function() {
     assert.throws(function() {
-      isMatch('a((b', 'a(b', {strict: true});
+      isMatch('a((b', 'a(b', {strictErrors: true});
     }, 'row:1 col:2 missing opening parens: "a(b"');
 
     assert.throws(function() {
-      isMatch('a((b', 'a(*b', {strict: true});
+      isMatch('a((b', 'a(*b', {strictErrors: true});
     }, 'row:1 col:2 missing opening parens: "a(*b"');
   });
 
@@ -45,6 +45,7 @@ describe('extglobs', function() {
   });
 
   it('should match extended globs:', function() {
+    match(['a.js.js', 'a.md.js'], '*.*(js).js', ['a.js.js']);
     match(['a/z', 'a/b'], 'a/!(z)', ['a/b']);
     match(['c/z/v'], 'c/z/v', ['c/z/v']);
     match(['c/a/v'], 'c/!(z)/v', ['c/a/v']);
@@ -88,7 +89,7 @@ describe('extglobs', function() {
   it('should work with globs', function() {
     var arr = ['123abc', 'ab', 'abab', 'abcdef', 'accdef', 'abcfefg', 'abef', 'abcfef', 'abd', 'acd'];
     match(arr, 'ab*(e|f)', ['ab', 'abef']);
-    match(arr, 'ab?*(e|f)', ['ab', 'abef']);
+    match(arr, 'ab?*(e|f)', ['abd', 'abef', 'abcfef']);
     match(arr, 'ab*d+(e|f)', ['abcdef']);
     match(arr, 'ab**(e|f)', ['ab', 'abab', 'abcdef', 'abcfefg', 'abcfef', 'abef', 'abd']);
     match(arr, 'ab*+(e|f)', ['abcdef', 'abcfef', 'abef']);
@@ -135,8 +136,8 @@ describe('extglobs', function() {
     match(['abd', 'acd', 'ac', 'ab'], 'a!(@(b|B))', ['acd', 'abd', 'ac']);
     match(['abd', 'acd'], 'a!(@(b|B))d', ['acd']);
     match(['abd', 'acd'], 'a[b*(foo|bar)]d', ['abd']);
-    // bash disagrees with this one. Bash says that `abcz` should match too.
-    // please create an issue to discuss if you agree with Bash.
+
+    // Bash 4.3 disagrees with this one (bash says that `abcz` should match as well)
     match(['abcx', 'abcz', 'bbc', 'aaz', 'aaaz'], '[a*(]*z', ['aaz', 'aaaz']);
   });
 
@@ -180,9 +181,9 @@ describe('extglobs', function() {
   it('should match common regex patterns', function() {
     var arr = ['a c', 'a1c', 'a123c', 'a.c', 'a.xy.zc', 'a.zc', 'abbbbc', 'abbbc', 'abbc', 'abc', 'abq', 'axy zc', 'axy', 'axy.zc', 'axyzc'];
 
+    match(arr, 'ab?bc', ['abbbc']);
     match(arr, 'ab*c', ['abbbbc', 'abbbc', 'abbc', 'abc']);
     match(arr, 'ab+bc', ['abbbbc', 'abbbc', 'abbc']);
-    match(arr, 'ab?bc', ['abbc', 'abc']);
     match(arr, '^abc$', ['abc']);
     match(arr, 'a.c', ['a.c']);
     match(arr, 'a.*c', ['a.c', 'a.xy.zc', 'a.zc']);

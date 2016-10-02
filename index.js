@@ -1,20 +1,22 @@
 'use strict';
 
 var debug = require('debug')('extglob');
+var toRegex = require('to-regex');
+var extend = require('extend-shallow');
 var compilers = require('./lib/compilers');
 var parsers = require('./lib/parsers');
 var Extglob = require('./lib/extglob');
-var utils = require('./lib/utils');
 var makeReCache = {};
 var cache = {};
 
 /**
- * Convert the given `extglob` pattern into a regex-compatible string.
+ * Convert the given `extglob` pattern into a regex-compatible string. Returns
+ * an object with the compiled result and the parsed AST.
  *
  * ```js
  * var extglob = require('extglob');
- * var str = extglob('*.!(*a)');
- * console.log(str);
+ * console.log(extglob('*.!(*a)').output);
+ * //=> '(?!\\.)[^/]*?\\.(?!(?!\\.)[^/]*?a\\b).*?'
  * ```
  * @param {String} `str`
  * @param {Object} `options`
@@ -45,7 +47,7 @@ function extglob(str, options) {
  */
 
 extglob.match = function(arr, pattern, options) {
-  arr = utils.arrayify(arr);
+  arr = [].concat(arr);
   options = options || {};
 
   var isMatch = extglob.matcher(pattern, options);
@@ -92,7 +94,7 @@ extglob.match = function(arr, pattern, options) {
 
 extglob.isMatch = function(str, pattern, options) {
   var key = pattern;
-  var regex;
+  var matcher;
 
   if (options) {
     for (var prop in options) {
@@ -102,12 +104,14 @@ extglob.isMatch = function(str, pattern, options) {
     }
   }
 
-  if (cache.hasOwnProperty(key)) {
-    regex = cache[key];
+  options = options || {};
+  if (options.cache !== false && cache.hasOwnProperty(key)) {
+    matcher = cache[key];
   } else {
-    regex = cache[key] = extglob.makeRe(pattern, options);
+    matcher = cache[key] = extglob.matcher(pattern, options);
   }
-  return regex.test(str);
+
+  return matcher(str);
 };
 
 /**
@@ -168,7 +172,20 @@ extglob.makeRe = function(pattern, options) {
     return makeReCache[key];
   }
 
-  regex = makeReCache[key] = new Extglob(options).makeRe(pattern);
+  var opts = extend({strictErrors: false}, options);
+  if (opts.strictErrors === true) {
+    opts.strict = true;
+  }
+
+  var ext = new Extglob(opts);
+  var ast = ext.parse(pattern, opts);
+  var res = ext.compile(ast, opts);
+
+  regex = toRegex(res.output, opts);
+  if (options.cache !== false) {
+    makeReCache[key] = regex;
+  }
+
   return regex;
 };
 
