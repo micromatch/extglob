@@ -81,6 +81,7 @@ module.exports = {
       '*.!(js)*': false, // Bash 4.3 disagrees!
       '*.!(js)+': false,
       '*.!(js)*.!(js)': false,
+      '*.!(js)*.js': false
     },
 
     'testjson.json': {
