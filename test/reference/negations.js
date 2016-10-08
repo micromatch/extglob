@@ -5,7 +5,6 @@
  */
 
 module.exports = {
-  options: { nonegate: true },
   cases: {
     'bar.min.js': {
       '*.!(js|css)': true,
@@ -15,6 +14,7 @@ module.exports = {
 
     'a-integration-test.js': {
       '*.!(j)': true,
+      '*.!(js)': false,
       '!(*-integration-test.js)': false,
       '*-!(integration-)test.js': true,
       '*-!(integration)-test.js': false,

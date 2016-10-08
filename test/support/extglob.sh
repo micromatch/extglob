@@ -229,11 +229,13 @@ t d.a.d          *.!(a)
 f ax             a?(b*)
 t ax             ?(a*|b)
 
-
 t ab                ab**(e|f)
+t abab              ab**(e|f)
 t abcdef            ab**(e|f)
-t abef              ab**(e|f)
 t abcfef            ab**(e|f)
+t abcfefg           ab**(e|f)
+t abd               ab**(e|f)
+t abef              ab**(e|f)
 
 f ab                ab**(e|f)g
 f abcdef            ab**(e|f)g
