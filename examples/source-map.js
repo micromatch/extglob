@@ -3,5 +3,5 @@
 var extglob = require('..');
 var pattern = '*(*(of*(a)x)z)';
 
-var res = extglob(pattern, {sourcemap: true});
-console.log(res);
+console.log(extglob.create(pattern));
+console.log(extglob.create(pattern, {sourcemap: true}));
