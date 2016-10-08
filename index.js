@@ -1,12 +1,20 @@
 'use strict';
 
+/**
+ * Module dependencies
+ */
+
 var debug = require('debug')('extglob');
-var toRegex = require('to-regex');
 var extend = require('extend-shallow');
+var toRegex = require('to-regex');
+
+/**
+ * Local dependencies
+ */
+
 var compilers = require('./lib/compilers');
 var parsers = require('./lib/parsers');
 var Extglob = require('./lib/extglob');
-var makeReCache = {};
 var cache = {};
 
 /**
@@ -15,19 +23,19 @@ var cache = {};
  *
  * ```js
  * var extglob = require('extglob');
- * console.log(extglob('*.!(*a)').output);
+ * console.log(extglob('*.!(*a)'));
  * //=> '(?!\\.)[^/]*?\\.(?!(?!\\.)[^/]*?a\\b).*?'
  * ```
- * @param {String} `str`
+ * @param {String} `pattern`
  * @param {Object} `options`
  * @return {String}
  * @api public
  */
 
-function extglob(str, options) {
-  var matcher = new Extglob(options);
-  var ast = matcher.parse(str, options);
-  return matcher.compile(ast, options);
+function extglob(pattern, options) {
+  debug('initializing from <%s>', __filename);
+  var res = extglob.create(pattern, options);
+  return res.output;
 }
 
 /**
@@ -93,16 +101,8 @@ extglob.match = function(arr, pattern, options) {
  */
 
 extglob.isMatch = function(str, pattern, options) {
-  var key = pattern;
+  var key = createKey('isMatch:' + pattern, options);
   var matcher;
-
-  if (options) {
-    for (var prop in options) {
-      if (options.hasOwnProperty(prop)) {
-        key += ';' + prop + '=' + String(options[prop]);
-      }
-    }
-  }
 
   options = options || {};
   if (options.cache !== false && cache.hasOwnProperty(key)) {
@@ -156,20 +156,12 @@ extglob.matcher = function(pattern, options) {
  */
 
 extglob.makeRe = function(pattern, options) {
-  var key = pattern;
+  var key = createKey('makeRe:' + pattern, options);
   var regex;
 
-  if (options) {
-    for (var prop in options) {
-      if (options.hasOwnProperty(prop)) {
-        key += ';' + prop + '=' + String(options[prop]);
-      }
-    }
-  }
-
   options = options || {};
-  if (options.cache !== false && makeReCache.hasOwnProperty(key)) {
-    return makeReCache[key];
+  if (options.cache !== false && cache.hasOwnProperty(key)) {
+    return cache[key];
   }
 
   var opts = extend({strictErrors: false}, options);
@@ -183,11 +175,59 @@ extglob.makeRe = function(pattern, options) {
 
   regex = toRegex(res.output, opts);
   if (options.cache !== false) {
-    makeReCache[key] = regex;
+    cache[key] = regex;
   }
-
   return regex;
 };
+
+/**
+ * Convert the given `extglob` pattern into a regex-compatible string. Returns
+ * an object with the compiled result and the parsed AST.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * console.log(extglob.create('*.!(*a)').output);
+ * //=> '(?!\\.)[^/]*?\\.(?!(?!\\.)[^/]*?a\\b).*?'
+ * ```
+ * @param {String} `str`
+ * @param {Object} `options`
+ * @return {String}
+ * @api public
+ */
+
+extglob.create = function(pattern, options) {
+  var key = createKey('create:' + pattern, options);
+
+  options = options || {};
+  if (options.cache !== false && cache.hasOwnProperty(key)) {
+    return cache[key];
+  }
+
+  var matcher = new Extglob(options);
+  var ast = matcher.parse(pattern, options);
+  var res = matcher.compile(ast, options);
+  cache[key] = res;
+  return res;
+};
+
+/**
+ * Create the key to use for memoization. The key is generated
+ * by iterating over the options and concatenating key-value pairs
+ * to the pattern string.
+ */
+
+function createKey(pattern, options) {
+  var key = pattern;
+  if (typeof options === 'undefined') {
+    return key;
+  }
+  for (var prop in options) {
+    if (options.hasOwnProperty(prop)) {
+      key += ';' + prop + '=' + String(options[prop]);
+    }
+  }
+  return key;
+}
 
 /**
  * Expose `extglob`
