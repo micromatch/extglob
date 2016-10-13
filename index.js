@@ -15,6 +15,7 @@ var toRegex = require('to-regex');
 var compilers = require('./lib/compilers');
 var parsers = require('./lib/parsers');
 var Extglob = require('./lib/extglob');
+var utils = require('./lib/utils');
 var cache = {};
 
 /**
@@ -47,34 +48,34 @@ function extglob(pattern, options) {
  * console.log(extglob.match(['a.a', 'a.b', 'a.c'], '*.!(*a)'));
  * //=> ['a.b', 'a.c']
  * ```
- * @param {Array} `arr` Array of strings to match
+ * @param {Array} `list` Array of strings to match
  * @param {String} `pattern` Extglob pattern
  * @param {Object} `options`
  * @return {Array}
  * @api public
  */
 
-extglob.match = function(arr, pattern, options) {
-  arr = [].concat(arr);
-  options = options || {};
-
+extglob.match = function(list, pattern, options) {
   var isMatch = extglob.matcher(pattern, options);
-  var len = arr.length;
+
+  list = [].concat(list);
+  var len = list.length;
   var idx = -1;
   var res = [];
 
   while (++idx < len) {
-    var ele = arr[idx];
+    var ele = list[idx];
+
     if (isMatch(ele)) {
       res.push(ele);
     }
   }
 
   if (res.length === 0) {
-    if (options.failglob === true) {
+    if (options && options.failglob === true) {
       throw new Error('no matches found for "' + pattern + '"');
     }
-    if (options.nonull === true || options.nullglob === true) {
+    if (options && (options.nonull === true || options.nullglob === true)) {
       return [pattern.split('\\').join('')];
     }
   }
@@ -101,11 +102,18 @@ extglob.match = function(arr, pattern, options) {
  */
 
 extglob.isMatch = function(str, pattern, options) {
-  var key = createKey('isMatch:' + pattern, options);
+  if (typeof str !== 'string') {
+    throw new TypeError('expected a string');
+  }
+  if (typeof pattern !== 'string') {
+    throw new TypeError('expected pattern to be a string');
+  }
+
+  var key = utils.createKey('isMatch:' + pattern, options);
   var matcher;
 
   options = options || {};
-  if (options.cache !== false && cache.hasOwnProperty(key)) {
+  if (!options || (options.cache !== false && cache.hasOwnProperty(key))) {
     matcher = cache[key];
   } else {
     matcher = cache[key] = extglob.matcher(pattern, options);
@@ -134,50 +142,14 @@ extglob.isMatch = function(str, pattern, options) {
  */
 
 extglob.matcher = function(pattern, options) {
+  if (typeof pattern !== 'string') {
+    throw new TypeError('expected pattern to be a string');
+  }
+
   var re = extglob.makeRe(pattern, options);
   return function(str) {
     return re.test(str);
   };
-};
-
-/**
- * Create a regular expression from the given string `pattern`.
- *
- * ```js
- * var extglob = require('extglob');
- * var re = extglob.makeRe('*.!(*a)');
- * console.log(re);
- * //=> /^[^\/]*?\.(?![^\/]*?a)[^\/]*?$/
- * ```
- * @param {String} `pattern` The pattern to convert to regex.
- * @param {Object} `options`
- * @return {RegExp}
- * @api public
- */
-
-extglob.makeRe = function(pattern, options) {
-  var key = createKey('makeRe:' + pattern, options);
-  var regex;
-
-  options = options || {};
-  if (options.cache !== false && cache.hasOwnProperty(key)) {
-    return cache[key];
-  }
-
-  var opts = extend({strictErrors: false}, options);
-  if (opts.strictErrors === true) {
-    opts.strict = true;
-  }
-
-  var ext = new Extglob(opts);
-  var ast = ext.parse(pattern, opts);
-  var res = ext.compile(ast, opts);
-
-  regex = toRegex(res.output, opts);
-  if (options.cache !== false) {
-    cache[key] = regex;
-  }
-  return regex;
 };
 
 /**
@@ -196,38 +168,73 @@ extglob.makeRe = function(pattern, options) {
  */
 
 extglob.create = function(pattern, options) {
-  var key = createKey('create:' + pattern, options);
+  if (typeof pattern !== 'string') {
+    throw new TypeError('expected pattern to be a string');
+  }
 
+  var key = utils.createKey('create:' + pattern, options);
   options = options || {};
-  if (options.cache !== false && cache.hasOwnProperty(key)) {
+  if (!options || (options.cache !== false && cache.hasOwnProperty(key))) {
     return cache[key];
   }
 
-  var matcher = new Extglob(options);
-  var ast = matcher.parse(pattern, options);
-  var res = matcher.compile(ast, options);
-  cache[key] = res;
+  var ext = new Extglob(options);
+  var ast = ext.parse(pattern, options);
+  var res = ext.compile(ast, options);
+  if (!options || options.cache !== false) {
+    cache[key] = res;
+  }
   return res;
 };
 
 /**
- * Create the key to use for memoization. The key is generated
- * by iterating over the options and concatenating key-value pairs
- * to the pattern string.
+ * Create a regular expression from the given `pattern` and `options`.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * var re = extglob.makeRe('*.!(*a)');
+ * console.log(re);
+ * //=> /^[^\/]*?\.(?![^\/]*?a)[^\/]*?$/
+ * ```
+ * @param {String} `pattern` The pattern to convert to regex.
+ * @param {Object} `options`
+ * @return {RegExp}
+ * @api public
  */
 
-function createKey(pattern, options) {
-  var key = pattern;
-  if (typeof options === 'undefined') {
-    return key;
+extglob.makeRe = function(pattern, options) {
+  if (typeof pattern !== 'string') {
+    throw new TypeError('expected pattern to be a string');
   }
-  for (var prop in options) {
-    if (options.hasOwnProperty(prop)) {
-      key += ';' + prop + '=' + String(options[prop]);
-    }
+
+  var key = utils.createKey('makeRe:' + pattern, options);
+  var regex;
+
+  options = options || {};
+  if (!options || (options.cache !== false && cache.hasOwnProperty(key))) {
+    return cache[key];
   }
-  return key;
-}
+
+  var opts = extend({strictErrors: false}, options);
+  if (opts.strictErrors === true) {
+    opts.strict = true;
+  }
+
+  var res = extglob.create(pattern, opts);
+  regex = toRegex(res.output, opts);
+  if (opts.cache !== false) {
+    cache[key] = regex;
+  }
+  return regex;
+};
+
+/**
+ * Expose `Extglob` constructor, parsers and compilers
+ */
+
+extglob.Extglob = Extglob;
+extglob.compilers = compilers;
+extglob.parsers = parsers;
 
 /**
  * Expose `extglob`
@@ -235,12 +242,3 @@ function createKey(pattern, options) {
  */
 
 module.exports = extglob;
-
-/**
- * Expose `Extglob` constructor
- * @type {Function}
- */
-
-module.exports.Extglob = Extglob;
-module.exports.compilers = compilers;
-module.exports.parsers = parsers;

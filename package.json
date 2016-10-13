@@ -28,27 +28,22 @@
   "dependencies": {
     "debug": "^2.2.0",
     "define-property": "^0.2.5",
-    "expand-brackets": "^2.0.0",
+    "expand-brackets": "^2.0.1",
     "export-files": "^2.1.1",
     "extend-shallow": "^2.0.1",
     "regex-not": "^1.0.0",
-    "snapdragon": "^0.7.0",
+    "snapdragon": "^0.8.1",
     "to-regex": "^2.1.0"
   },
   "devDependencies": {
-    "async-array-reduce": "^0.2.0",
     "cross-spawn": "^4.0.2",
-    "delete": "^0.3.2",
     "for-own": "^0.1.4",
     "gulp-format-md": "^0.1.11",
     "helper-changelog": "^0.3.0",
-    "is-extglob": "^2.0.0",
     "micromatch": "^2.3.11",
     "minimatch": "^3.0.3",
-    "mkdirp": "^0.5.1",
-    "mocha": "^3.1.0",
+    "mocha": "^3.1.2",
     "noncharacters": "^1.1.0",
-    "rimraf": "^2.5.4",
     "yargs-parser": "^4.0.2"
   },
   "keywords": [
