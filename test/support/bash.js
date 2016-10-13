@@ -1,50 +1,48 @@
 'use strict';
 
-var path = require('path');
 var spawn = require('cross-spawn');
-var utils = require('./utils');
+var bashPath = process.env.BASH || '/usr/local/bin/bash';
 
-function bash(pattern, options) {
+function bash(str, pattern, options) {
   var cmd = pattern;
 
   if (!/echo/.test(cmd)) {
-    cmd = `shopt -s extglob && shopt -s nullglob && echo ${escape(pattern)}`;
+    cmd = `shopt -s extglob && if [[ ${str} == ${pattern} ]]; then echo true; fi`;
   }
 
-  var cp = spawn.sync('bash', ['-c', cmd], options);
-  var err = cp.stderr.toString().trim();
+  var res = spawn.sync(bashPath, ['-c', cmd], options);
+  var err = toString(res.stderr);
   if (err) {
     console.error(cmd);
     throw new Error(err);
   }
-  return unescape(cp.stdout);
+
+  return toString(res.stdout) || false;
 }
 
+bash.isMatch = function(fixture, pattern, options) {
+  return bash(fixture, pattern, options);
+};
+
+bash.match = function(fixtures, pattern) {
+  var matches = [];
+  var len = fixtures.length;
+  var idx = -1;
+  while (++idx < len) {
+    var fixture = fixtures[idx];
+    if (bash.isMatch(fixture, pattern)) {
+      matches.push(fixture);
+    }
+  }
+  return matches;
+};
+
 /**
- * Escape characters that behave differently in bash than node (like spaces, which are
- * valid path characters in node.js but indicate a delimiter in Bash)
+ * Stringify `buf`
  */
 
-function escape(buf) {
-  return buf.split(/\\? /).join('_SPACE_')
-    .replace(/([\[\]])/g, '\\$1')
-    .replace(/(\$\{)([^{}]+)(\})/g, function(m, $1, $2, $3) {
-      return utils.nc[0] + $2 + utils.nc[2];
-    });
-}
-
-/**
- * Unescape previously-escaped characters
- */
-
-function unescape(buf) {
-  return buf.toString().split(/[ \n]/)
-    .filter(Boolean)
-    .map(function(str) {
-      return utils.unescape(str, {escape: true})
-        .split('_SPACE_').join(' ')
-        .split('\\').join('');
-    });
+function toString(buf) {
+  return buf ? buf.toString().trim() : null;
 }
 
 /**

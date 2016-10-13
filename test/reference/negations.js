@@ -56,7 +56,12 @@ module.exports = {
     },
 
     'asd.js.xyz': {
-      '*.!(js).!(xy)': false
+      '*.!(js)*.!(xyz)*': false,
+      '*.!(js)*.!(xyz)': false,
+      '*.!(js)*.!(xy)*': false,
+      '*.!(js)*.!(xy)': false,
+      '*.!(js).!(xy)*': false,
+      '*.!(js).!(xy)': true
     },
 
     'asd.js.xy': {
@@ -77,11 +82,32 @@ module.exports = {
     },
 
     'foo.js.js': {
-      '*.!(js)': false, // Bash 4.3 disagrees!
-      '*.!(js)*': false, // Bash 4.3 disagrees!
-      '*.!(js)+': false,
+      '*!(js)': true,
+      '*!(.js)': true,
+      '*!(.js.js)': true,
+      '*!(.js.js)*': true,
+      '*(.js.js)': false,
+      '**(.js.js)': true,
+      '*(!(.js.js))': true,
       '*.!(js)*.!(js)': false,
-      '*.!(js)*.js': false
+      '*.!(js)+': false,
+      '!(*(.js.js))': true,
+      '*.!(js)': true,
+      '*.!(js)*': false,     // Bash 4.3 disagrees!
+      '*.!(js)*.js': false  // Bash 4.3 disagrees!
+    },
+
+    'a/foo.js.js': {
+      '*/**(.*)': true,
+      '*/**(.*.*)': true,
+      'a/**(.*.*)': true,
+      '*/**(.js.js)': true,
+      'a/f*(!(.js.js))': true,
+      'a/!(*(.*))': true,
+      'a/!(+(.*))': true,
+      'a/!(*(.*.*))': true,
+      '*/!(*(.*.*))': true,
+      'a/!(*(.js.js))': true
     },
 
     'testjson.json': {
@@ -92,14 +118,17 @@ module.exports = {
     },
 
     'foojs.js': {
-      '*(*.json|!(*.js))': false,
-      '+(*.json|!(*.js))': false,
+      '*(*.json|!(*.js))': false, // Bash 4.3 disagrees!
+      '*(*.json|!(*.js))*': true,
+      '+(*.json|!(*.js))': false, // Bash 4.3 disagrees!
       '@(*.json|!(*.js))': false,
       '?(*.json|!(*.js))': false
     },
 
     'other.bar': {
       '*(*.json|!(*.js))': true,
+      '*(*.json|!(*.js))*': true,
+      '!(*(*.json|!(*.js)))*': false,
       '+(*.json|!(*.js))': true,
       '@(*.json|!(*.js))': true,
       '?(*.json|!(*.js))': true

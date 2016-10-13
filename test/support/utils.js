@@ -44,12 +44,12 @@ exports.cleanResults = function(m) {
   // normalize discrepancies in ordering, duplication, and ending slashes.
   return m.map(function(m) {
     return m.replace(/\/+/g, '/').replace(/\/$/, '');
-  }).sort(exports.alphasort).reduce(function(set, f) {
+  }).sort(exports.alphaSort).reduce(function(set, f) {
     if (f !== set[set.length - 1]) {
       set.push(f);
     }
     return set;
-  }, []).sort(exports.alphasort).map(function(f) {
+  }, []).sort(exports.alphaSort).map(function(f) {
     return isWindows ? f.replace(/^[a-zA-Z]:\\\\/, '/').replace(/\\/g, '/') : f;
   });
 };
@@ -68,7 +68,7 @@ exports.flatten = function(chunks) {
   return out.toString().trim();
 };
 
-exports.alphasort = function(a, b) {
+exports.alphaSort = function(a, b) {
   a = a.toLowerCase();
   b = b.toLowerCase();
   return a > b ? 1 : a < b ? -1 : 0;
