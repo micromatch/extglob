@@ -115,7 +115,8 @@ extglob.isMatch = function(str, pattern, options) {
     throw new TypeError('expected a string');
   }
 
-  return extglob.matcher(pattern, options)(str);
+  var isMatch = memoize('isMatch', pattern, options, extglob.matcher);
+  return isMatch(str);
 };
 
 /**

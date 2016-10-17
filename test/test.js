@@ -203,7 +203,10 @@ describe('bash unit tests', function() {
 
   it('should match extended globs from the bash spec:', function() {
     var f2 = ['bar', 'f', 'fa', 'fb', 'ff', 'fff', 'fo', 'foo', 'foo/bar', 'foobar', 'foot', 'foox', 'o', 'of', 'ooo', 'ox', 'x', 'xx'];
+    match(f2, '!(foo)', ['bar', 'f', 'fa', 'fb', 'ff', 'fff', 'fo', 'foo/bar', 'foobar', 'foot', 'foox', 'o', 'of', 'ooo', 'ox', 'x', 'xx']);
     match(f2, '!(!(foo))', ['foo']);
+    match(f2, '!(!(!(foo)))', ['bar', 'f', 'fa', 'fb', 'ff', 'fff', 'fo', 'foo/bar', 'foobar', 'foot', 'foox', 'o', 'of', 'ooo', 'ox', 'x', 'xx']);
+    match(f2, '!(!(!(!(foo))))', ['foo']);
     match(f2, '!(!(foo))*', ['foo', 'foo/bar', 'foobar', 'foot', 'foox']);
     match(f2, '!(f!(o))', ['fo']);
     match(f2, '!(f(o))', ['bar', 'f', 'fa', 'fb', 'ff', 'fff', 'foo', 'foobar', 'foo/bar', 'foot', 'foox', 'o', 'of', 'ooo', 'ox', 'x', 'xx']);
