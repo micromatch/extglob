@@ -31,7 +31,7 @@
     "define-property": "^0.2.5",
     "expand-brackets": "^2.0.1",
     "extend-shallow": "^2.0.1",
-    "fragment-cache": "^0.1.0",
+    "fragment-cache": "^0.2.0",
     "regex-not": "^1.0.0",
     "snapdragon": "^0.8.1",
     "to-regex": "^2.1.0"
