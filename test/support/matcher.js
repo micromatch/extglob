@@ -2,10 +2,10 @@
 
 var argv = require('yargs-parser')(process.argv.slice(2));
 var mm = require('multimatch');
-var bash = require('bash-match');
 var minimatch = require('minimatch');
-var utils = require('../../lib/utils');
-var brackets = require('../..');
+var bash = require('./try-bash');
+var utils = require('./utils');
+var extglob = require('../..');
 
 // use multimatch for the array/array scenario
 function mi() {
@@ -15,14 +15,8 @@ function mi() {
 // label for debugging
 mm.multimatch = true;
 mi.minimatch = true;
-brackets.brackets = true;
+extglob.extglob = true;
 bash.bash = true;
-
-/**
- * Decorate methods onto bash for parity with nanomatch
- */
-
-bash.makeRe = function() {};
 
 /**
  * Decorate methods onto multimatch for parity with nanomatch
@@ -30,6 +24,10 @@ bash.makeRe = function() {};
 
 mm.isMatch = function(files, patterns, options) {
   return mm(utils.arrayify(files), patterns, options).length > 0;
+};
+
+mm.contains = function(files, patterns, options) {
+  return mm.isMatch(files, patterns, options);
 };
 
 mm.match = function(files, patterns, options) {
@@ -48,6 +46,10 @@ mi.isMatch = function(file, pattern, options) {
   return minimatch(file, pattern, options);
 };
 
+mi.contains = function(files, patterns, options) {
+  return mi.isMatch(files, patterns, options);
+};
+
 mi.match = function(files, pattern, options) {
   return minimatch.match(utils.arrayify(files), pattern, options);
 };
@@ -60,7 +62,7 @@ mi.makeRe = function(pattern, options) {
  * Detect matcher based on argv, with nanomatch as default
  */
 
-var matcher = argv.mm ? mm : (argv.mi ? mi : brackets);
+var matcher = argv.mm ? mm : (argv.mi ? mi : extglob);
 if (argv.bash) {
   matcher = bash;
 }
@@ -71,6 +73,6 @@ if (argv.bash) {
 
 module.exports = matcher;
 module.exports.bash = bash;
-module.exports.brackets = brackets;
+module.exports.extglob = extglob;
 module.exports.mm = mm;
 module.exports.mi = mi;

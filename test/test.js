@@ -15,6 +15,7 @@ describe('extglobs', function() {
 
   it.skip('failing unit test from bash', function() {
     match(['moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
+    match(['foo.js.js'], '*.!(js)*', ['foo.js.js']);
   });
 
   it('should throw on imbalanced sets when `options.strictErrors` is true', function() {
@@ -103,20 +104,20 @@ describe('extglobs', function() {
   });
 
   it('stuff from korn\'s book', function() {
-    assert(match.isMatch('paragraph', 'para@(chute|graph)'));
-    assert(!match.isMatch('paramour', 'para@(chute|graph)'));
-    assert(match.isMatch('para991', 'para?([345]|99)1'));
+    assert(!match.isMatch('para', 'para+([0-9])'));
     assert(!match.isMatch('para381', 'para?([345]|99)1'));
     assert(!match.isMatch('paragraph', 'para*([0-9])'));
-    assert(match.isMatch('para', 'para*([0-9])'));
-    assert(match.isMatch('para13829383746592', 'para*([0-9])'));
     assert(!match.isMatch('paragraph', 'para*([0-9])'));
-    assert(!match.isMatch('para', 'para+([0-9])'));
-    assert(match.isMatch('para987346523', 'para+([0-9])'));
-    assert(match.isMatch('paragraph', 'para!(*.[0-9])'));
+    assert(!match.isMatch('paramour', 'para@(chute|graph)'));
+    assert(match.isMatch('para', 'para*([0-9])'));
     assert(match.isMatch('para.38', 'para!(*.[00-09])'));
     assert(match.isMatch('para.graph', 'para!(*.[0-9])'));
+    assert(match.isMatch('para13829383746592', 'para*([0-9])'));
     assert(match.isMatch('para39', 'para!(*.[0-9])'));
+    assert(match.isMatch('para987346523', 'para+([0-9])'));
+    assert(match.isMatch('para991', 'para?([345]|99)1'));
+    assert(match.isMatch('paragraph', 'para!(*.[0-9])'));
+    assert(match.isMatch('paragraph', 'para@(chute|graph)'));
   });
 
   it('tests derived from those in rosenblatt\'s korn shell book', function() {
@@ -315,8 +316,8 @@ describe('bash unit tests', function() {
   });
 
   it('tests derived from the pd-ksh test suite', function() {
-    match(['abcx', 'abcz', 'bbc'], '!([*)*', []);
-    match(['abcx', 'abcz', 'bbc'], '+(a|b[)*', []);
+    match(['abcx', 'abcz', 'bbc'], '!([*)*', ['abcx', 'abcz', 'bbc']);
+    match(['abcx', 'abcz', 'bbc'], '+(a|b[)*', ['abcx', 'abcz']);
     match(['abcx', 'abcz', 'bbc'], '[a*(]*)z', []);
 
     match(['abc'], '+()c', []);
@@ -387,11 +388,15 @@ describe('bash unit tests', function() {
 
   it('should work with character classes', function() {
     var fixtures = ['a.b', 'a,b', 'a:b', 'a-b', 'a;b', 'a b', 'a_b'];
-    match(fixtures, 'a[-.,:\;\ _]b', fixtures);
+    match(fixtures, 'a[^[:alnum:]]b', fixtures);
+    match(fixtures, 'a[-.,:\\;\\ _]b', fixtures);
+    match(fixtures, 'a@([^[:alnum:]])b', fixtures);
     match(fixtures, 'a@([-.,:; _])b', fixtures);
     match(fixtures, 'a@([.])b', ['a.b']);
     match(fixtures, 'a@([^.])b', ['a,b', 'a:b', 'a-b', 'a;b', 'a b', 'a_b']);
     match(fixtures, 'a@([^x])b', ['a,b', 'a:b', 'a-b', 'a;b', 'a b', 'a_b']);
+    match(fixtures, 'a+([^[:alnum:]])b', fixtures);
+    match(fixtures, 'a@(.|[^[:alnum:]])b', fixtures);
   });
 
   it('should support POSIX character classes in extglobs', function() {
@@ -405,15 +410,6 @@ describe('bash unit tests', function() {
     assert(!match.isMatch('.', '!([[:alpha:].])'));
     assert(match.isMatch('.', '?([[:alpha:].])'));
     assert(match.isMatch('.', '@([[:alpha:].])'));
-  });
-
-  // ported from http://www.bashcookbook.com/bashinfo/source/bash-4.3/tests/extglob1a.sub
-  it('should pass extglob1a tests', function() {
-    var fixtures = ['a', 'ab', 'ba', 'ax'];
-    match(fixtures, 'a!(x)', ['a', 'ab']);
-    match(fixtures, 'a*!(x)', ['a', 'ab', 'ax']);
-    match(fixtures, 'a*?(x)', ['a', 'ab', 'ax']);
-    match(fixtures, 'a?(x)', ['a', 'ax']);
   });
 
   // ported from http://www.bashcookbook.com/bashinfo/source/bash-4.3/tests/extglob2.tests

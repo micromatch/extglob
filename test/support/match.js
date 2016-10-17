@@ -18,6 +18,7 @@ module.exports = function(fixtures, pattern, expected, options, msg) {
   }
 
   msg = msg ? (pattern + ' ' + msg) : pattern;
+
   var actual = matcher.match(utils.arrayify(fixtures), pattern, options);
   expected.sort(compare);
   actual.sort(compare);
@@ -46,9 +47,14 @@ module.exports.match = function(fixtures, pattern, expected, options, msg) {
   assert.deepEqual(actual, expected, msg);
 };
 
-module.exports.isMatch = function() {
+module.exports.isMatch = function(fixture, pattern, options) {
   return matcher.isMatch.apply(null, arguments);
 };
-module.exports.makeRe = function() {
+
+module.exports.contains = function(fixture, pattern, options) {
+  return matcher.contains.apply(null, arguments);
+};
+
+module.exports.makeRe = function(pattern, options) {
   return matcher.makeRe.apply(null, arguments);
 };

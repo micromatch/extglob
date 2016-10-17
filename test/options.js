@@ -28,10 +28,10 @@ describe('options', function() {
 
   describe('options.strict', function() {
     it('should throw an error when an opening brace is missing', function(cb) {
-      assert(extglob.isMatch('a)', 'a)'));
+      assert(!extglob.isMatch('foo', 'a)'));
       try {
-        assert(extglob.isMatch('a)', 'a)', {strict: true}));
-        cb(new Error('expected an error'));
+        assert(!extglob.isMatch('foo', 'a)', {strict: true}));
+        return cb(new Error('expected an error'));
       } catch (err) {
         assert(/missing/.test(err.message));
       }
