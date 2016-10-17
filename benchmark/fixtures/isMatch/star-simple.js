@@ -1,1 +1,1 @@
-module.exports = ['abef', 'ab*(e|f)', true];
+module.exports = ['abef', 'ab*(e|f)*', true];

@@ -1,5 +1,5 @@
 var minimatch = require('minimatch');
 
-module.exports = function(file, pattern) {
-  return minimatch(file, pattern);
+module.exports = function(str, pattern) {
+  return minimatch(str, pattern);
 };
