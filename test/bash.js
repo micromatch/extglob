@@ -1,285 +1,290 @@
 'use strict';
 
 require('mocha');
-var argv = require('yargs-parser')(process.argv.slice(2));
+var match = require('./support/match');
 var assert = require('assert');
-var extglob = require('..');
-var isMatch = extglob.isMatch;
-
-if (argv.mm) {
-  isMatch = require('minimatch');
-}
 
 describe('running extglob against minimatch tests', function() {
-  it('miscellaneous bash tests', function() {
-    assert(!isMatch('*(a|b[)', '*(a|b\\[)'));
-    assert(!isMatch('123abc', 'ab*d+(e|f)'));
-    assert(!isMatch('123abc', 'ab?*(e|f)'));
-    assert(!isMatch('a', '!(a)'));
-    assert(!isMatch('a', '(b)'));
-    assert(!isMatch('a', '??'));
-    assert(!isMatch('a', 'a??b'));
-    assert(!isMatch('a', 'b?(a|b)'));
-    assert(!isMatch('a.', '*.+(b|d)'));
-    assert(!isMatch('a.a', '!(*.[a-b]*)'));
-    assert(!isMatch('a.a', '!(*.a|*.b|*.c)'));
-    assert(!isMatch('a.a', '!(*[a-b].[a-b]*)'));
-    assert(!isMatch('a.a', '!*.(a|b)'));
-    assert(!isMatch('a.a', '!*.(a|b)*'));
-    assert(!isMatch('a.a', '*.!(a)'));
-    assert(!isMatch('a.a', '*.+(b|d)'));
-    assert(!isMatch('a.a.a', '!(*.[a-b]*)'));
-    assert(!isMatch('a.a.a', '!(*[a-b].[a-b]*)'));
-    assert(!isMatch('a.a.a', '!*.(a|b)'));
-    assert(!isMatch('a.a.a', '!*.(a|b)*'));
-    assert(!isMatch('a.a.a', '*.+(b|d)'));
-    assert(!isMatch('a.abcd', '!(*.a|*.b|*.c)'));
-    assert(!isMatch('a.abcd', '!(*.a|*.b|*.c)*'));
-    assert(!isMatch('a.abcd', '*.!(a|b|c)'));
-    assert(!isMatch('a.abcd', '*.!(a|b|c)*'));
-    assert(!isMatch('a.b', '!(*.*)'));
-    assert(!isMatch('a.b', '!(*.[a-b]*)'));
-    assert(!isMatch('a.b', '!(*[a-b].[a-b]*)'));
-    assert(!isMatch('a.b', '!*.(a|b)'));
-    assert(!isMatch('a.b', '!*.(a|b)*'));
-    assert(!isMatch('a.bb', '!(*.[a-b]*)'));
-    assert(!isMatch('a.bb', '!(*[a-b].[a-b]*)'));
-    assert(!isMatch('a.bb', '!*.(a|b)'));
-    assert(!isMatch('a.bb', '!*.(a|b)*'));
-    assert(!isMatch('a.ccc', '!*.(a|b)'));
-    assert(!isMatch('a.ccc', '!*.(a|b)*'));
-    assert(!isMatch('a.ccc', '*.+(b|d)'));
-    assert(!isMatch('a.js', '!(*.js)'));
-    assert(!isMatch('a.js', '*.!(js)'));
-    assert(!isMatch('a.js.js', '!(*.js)'));
-    assert(!isMatch('aa', '?'));
-    assert(!isMatch('aa', '@(a)b'));
-    assert(!isMatch('aa', 'a??b'));
-    assert(!isMatch('aab', '?'));
-    assert(!isMatch('aab', '??'));
-    assert(!isMatch('aab', '@(c)b'));
-    assert(!isMatch('ab', 'a!(@(b|B))'));
-    assert(!isMatch('aB', 'a!(@(b|B))'));
-    assert(!isMatch('ab', 'a(*b'));
-    assert(!isMatch('ab', 'ab**(e|f)g'));
-    assert(!isMatch('ab', 'ab*+(e|f)'));
-    assert(!isMatch('ab', 'ab*d+(e|f)'));
-    assert(!isMatch('ab', 'ab?*(e|f)'));
-    assert(!isMatch('abcdef', '(a+|b)+'));
-    assert(!isMatch('abcdef', 'ab**(e|f)g'));
-    assert(!isMatch('abcdef', 'ab?*(e|f)'));
-    assert(!isMatch('abcfef', '(a+|b)+'));
-    assert(!isMatch('abcfef', 'ab**(e|f)g'));
-    assert(!isMatch('abcfef', 'ab*d+(e|f)'));
-    assert(!isMatch('abcfefg', '(a+|b)+'));
-    assert(!isMatch('abcfefg', 'ab*d+(e|f)'));
-    assert(!isMatch('abcfefg', 'ab?*(e|f)'));
-    assert(!isMatch('abd', '(a+|b)+'));
-    assert(!isMatch('abd', 'a!(@(b|B))d'));
-    assert(!isMatch('abd', 'ab*d+(e|f)'));
-    assert(!isMatch('abef', '(a+|b)+'));
-    assert(!isMatch('abef', '*(a+|b)'));
-    assert(!isMatch('abef', 'ab**(e|f)g'));
-    assert(!isMatch('abef', 'ab*d+(e|f)'));
-    assert(!isMatch('acd', '(a+|b)+'));
-    assert(!isMatch('acd', 'ab*d+(e|f)'));
-    assert(!isMatch('acd', 'ab?*(e|f)'));
-    assert(!isMatch('ax', 'a?(b*)'));
-    assert(!isMatch('b/a', '!(b/a)'));
-    assert(!isMatch('baaac', '*(@(a))a@(c)'));
-    assert(!isMatch('bb', 'a?(a|b)'));
-    assert(!isMatch('c', '*(@(a))a@(c)'));
-    assert(!isMatch('c.a', '!(*.[a-b]*)'));
-    assert(!isMatch('c.a', '!*.(a|b)'));
-    assert(!isMatch('c.a', '!*.(a|b)*'));
-    assert(!isMatch('c.a', '*.!(a)'));
-    assert(!isMatch('c.a', '*.+(b|d)'));
-    assert(!isMatch('c.js', '!(*.js)'));
-    assert(!isMatch('c.js', '*.!(js)'));
-    assert(!isMatch('cow', '.!(*.*)'));
-    assert(!isMatch('d.a.d', '!*.(a|b)'));
-    assert(!isMatch('d.a.d', '!*.(a|b)*'));
-    assert(!isMatch('egz', '@(b+(c)d|e+(f)g?|?(h)i@(j|k))'));
-    assert(!isMatch('f', '!(f)'));
-    assert(!isMatch('f', '*(!(f))'));
-    assert(!isMatch('f', '+(!(f))'));
-    assert(!isMatch('f.a', '!(*.a|*.b|*.c)'));
-    assert(!isMatch('f.a', '*.!(a|b|c)'));
-    assert(!isMatch('foo', '!(foo)'));
-    assert(!isMatch('foo', '!(foo)*')); // bash 4.3 disagrees
-    assert(!isMatch('foo', '!(foo)+'));
-    assert(!isMatch('foo', '!(foo)b*'));
-    assert(!isMatch('foo', '*(!(foo))'));
-    assert(!isMatch('foo.js.js', '*.!(js)*'));
-    assert(!isMatch('foo.js.js', '*.!(js)*.!(js)'));
-    assert(!isMatch('foo.js.js', '*.!(js)+'));
-    assert(!isMatch('foob', '!(foo)b*'));
-    assert(!isMatch('foobar', '!(foo)*')); // bash 4.3 disagrees
-    assert(!isMatch('foobar', '!(foo)b*'));
-    assert(!isMatch('foobb', '!(foo)b*'));
-    assert(!isMatch('foooofof', '*(f+(o))'));
-    assert(!isMatch('foooofofx', '*(f*(o))'));
-    assert(!isMatch('foooxfooxofoxfooox', '*(f*(o)x)'));
-    assert(!isMatch('mad.moo.cow', '!(*.*).!(*.*)'));
-    assert(!isMatch('mad.moo.cow', '.!(*.*)'));
-    assert(!isMatch('Makefile.in', '!(*.c|*.h|Makefile.in|config*|README)'));
-    assert(!isMatch('moo', '.!(*.*)'));
-    assert(!isMatch('moo.cow', '!(*.*).!(*.*)')); // bash 4.3 disagrees
-    assert(!isMatch('moo.cow', '.!(*.*)'));
-    assert(!isMatch('mucca.pazza', 'mu!(*(c))?.pa!(*(z))?'));
-    assert(!isMatch('ofooofoofofooo', '*(f*(o))'));
-    assert(!isMatch('ofoooxoofxoofoooxoofxofo', '*(*(of*(o)x)o)'));
-    assert(!isMatch('oxfoxfox', '*(oxf+(ox))'));
-    assert(!isMatch('shell.c', '!(*.c|*.h|Makefile.in|config*|README)'));
-    assert(!isMatch('xfoooofof', '*(f*(o))'));
-    assert(!isMatch('zoot', '@(!(z*)|*x)'));
-    assert(!isMatch('zz', '(a+|b)*'));
-    assert(isMatch('a', '(a)'));
-    assert(isMatch('a', '*(a)'));
-    assert(isMatch('a', '+(a)'));
-    assert(isMatch('a', '?'));
-    assert(isMatch('a', '?(a|b)'));
-    assert(isMatch('a', 'a?(a|b)'));
-    assert(isMatch('a', 'a?(x)'));
-    assert(isMatch('a((((b', 'a(*b'));
-    assert(isMatch('a((b', 'a(*b'));
-    assert(isMatch('a(b', 'a(*b'));
-    assert(isMatch('a.', '!(*.a|*.b|*.c)'));
-    assert(isMatch('a.', '*!(.a|.b|.c)'));
-    assert(isMatch('a.', '*.!(a)'));
-    assert(isMatch('a.', '*.!(a|b|c)'));
-    assert(isMatch('a.a', '(a|d).(a|b)*'));
-    assert(isMatch('a.a', '*!(.a|.b|.c)'));
-    assert(isMatch('a.a.a', '*.!(a)'));
-    assert(isMatch('a.abcd', '*!(*.a|*.b|*.c)*'));
-    assert(isMatch('a.abcd', '*!(.a|.b|.c)'));
-    assert(isMatch('a.b', '(a|d).(a|b)*'));
-    assert(isMatch('a.b', '*!(.a|.b|.c)'));
-    assert(isMatch('a.b', '*.!(a)'));
-    assert(isMatch('a.b', '*.+(b|d)'));
-    assert(isMatch('a.bb', '(a|d).(a|b)*'));
-    assert(isMatch('a.bb', '*.+(b|d)'));
-    assert(isMatch('a.c', '*!(.a|.b|.c)'));
-    assert(isMatch('a.c.d', '!(*.a|*.b|*.c)'));
-    assert(isMatch('a.c.d', '*!(.a|.b|.c)'));
-    assert(isMatch('a.c.d', '*.!(a|b|c)'));
-    assert(isMatch('a.ccc', '!(*.[a-b]*)'));
-    assert(isMatch('a.ccc', '!(*[a-b].[a-b]*)'));
-    assert(isMatch('a.js', '*!(.js)'));
-    assert(isMatch('a.js.js', '*!(.js)'));
-    assert(isMatch('a.js.js', '*.!(js)'));
-    assert(isMatch('a.md', '!(*.js)'));
-    assert(isMatch('a.md', '*!(.js)'));
-    assert(isMatch('a.md', '*.!(js)'));
-    assert(isMatch('aa', '!(a)'));
-    assert(isMatch('aaac', '*(@(a))a@(c)'));
-    assert(isMatch('aab', 'a??b'));
-    assert(isMatch('aac', '*(@(a))a@(c)'));
-    assert(isMatch('ab', '!(*.*)'));
-    assert(isMatch('ab', '(a+|b)+'));
-    assert(isMatch('ab', 'ab**(e|f)'));
-    assert(isMatch('ab]', 'a!(@(b|B))'));
-    assert(isMatch('abab', 'ab**(e|f)'));
-    assert(isMatch('abb', '!(*.*)'));
-    assert(isMatch('abbcd', '@(ab|a*(b))*(c)d'));
-    assert(isMatch('aBc', 'a!(@(b|B))'));
-    assert(isMatch('abcd', '?@(a|b)*@(c)d'));
-    assert(isMatch('abcd', '@(ab|a*@(b))*(c)d'));
-    assert(isMatch('abcdef', '(a+|b)*'));
-    assert(isMatch('abcdef', 'ab**(e|f)'));
-    assert(isMatch('abcdef', 'ab*+(e|f)'));
-    assert(isMatch('abcdef', 'ab*d+(e|f)'));
-    assert(isMatch('abcfef', '(a+|b)*'));
-    assert(isMatch('abcfef', 'ab**(e|f)'));
-    assert(isMatch('abcfef', 'ab*+(e|f)'));
-    assert(isMatch('abcfef', 'ab?*(e|f)'));
-    assert(isMatch('abcfefg', '(a+|b)*'));
-    assert(isMatch('abcfefg', 'ab**(e|f)'));
-    assert(isMatch('abd', '(a+|b)*'));
-    assert(isMatch('abd', 'a!(@(b|B))'));
-    assert(isMatch('abd', 'ab**(e|f)'));
-    assert(isMatch('abd', 'ab?*(e|f)'));
-    assert(isMatch('abef', '(a+|b)*'));
-    assert(isMatch('abef', 'ab**(e|f)'));
-    assert(isMatch('abef', 'ab*+(e|f)'));
-    assert(isMatch('abef', 'ab?*(e|f)'));
-    assert(isMatch('ac', '*(@(a))a@(c)'));
-    assert(isMatch('ac', 'a!(@(b|B))'));
-    assert(isMatch('acd', '(a+|b)*'));
-    assert(isMatch('acd', '@(ab|a*(b))*(c)d'));
-    assert(isMatch('acd', 'a!(@(b|B))'));
-    assert(isMatch('acd', 'a!(@(b|B))d'));
-    assert(isMatch('ax', '?(a*|b)'));
-    assert(isMatch('b', '(a+|b)*'));
-    assert(isMatch('b/b', '!(b/a)'));
-    assert(isMatch('b/c', '!(b/a)'));
-    assert(isMatch('ba', 'b?(a|b)'));
-    assert(isMatch('bar', '!(foo)*'));
-    assert(isMatch('bar', '!(foo)b*'));
-    assert(isMatch('baz', '!(foo)*'));
-    assert(isMatch('baz', '!(foo)b*'));
-    assert(isMatch('c.a', '!(*[a-b].[a-b]*)'));
-    assert(isMatch('c.c', '*!(.a|.b|.c)'));
-    assert(isMatch('c.ccc', '!(*.[a-b]*)'));
-    assert(isMatch('c.ccc', '!(*[a-b].[a-b]*)'));
-    assert(isMatch('c.js', '*!(.js)'));
-    assert(isMatch('d.a.d', '!(*.[a-b]*)'));
-    assert(isMatch('d.a.d', '!(*[a-b].[a-b]*)'));
-    assert(isMatch('d.a.d', '*.!(a)'));
-    assert(isMatch('d.a.d', '*.+(b|d)'));
-    assert(isMatch('d.d', '!(*.a|*.b|*.c)'));
-    assert(isMatch('d.d', '*!(.a|.b|.c)'));
-    assert(isMatch('d.d', '*.!(a|b|c)'));
-    assert(isMatch('d.js.d', '!(*.js)'));
-    assert(isMatch('d.js.d', '*!(.js)'));
-    assert(isMatch('d.js.d', '*.!(js)'));
-    assert(isMatch('e.e', '!(*.a|*.b|*.c)'));
-    assert(isMatch('e.e', '*!(.a|.b|.c)'));
-    assert(isMatch('e.e', '*.!(a|b|c)'));
-    assert(isMatch('effgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('efgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('egz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('egzefffgzbcdij', '*(b+(c)d|e*(f)g?|?(h)i@(j|k))'));
-    assert(isMatch('f.a', '*!(.a|.b|.c)'));
-    assert(isMatch('f.f', '!(*.a|*.b|*.c)'));
-    assert(isMatch('f.f', '*!(.a|.b|.c)'));
-    assert(isMatch('f.f', '*.!(a|b|c)'));
-    assert(isMatch('fff', '!(f)'));
-    assert(isMatch('fff', '*(!(f))'));
-    assert(isMatch('fff', '+(!(f))'));
-    assert(isMatch('fffooofoooooffoofffooofff', '*(*(f)*(o))'));
-    assert(isMatch('ffo', '*(f*(o))'));
-    assert(isMatch('fofo', '*(f*(o))'));
-    assert(isMatch('fofoofoofofoo', '*(fo|foo)'));
-    assert(isMatch('foo', '!(f)'));
-    assert(isMatch('foo', '!(x)'));
-    assert(isMatch('foo', '!(x)*'));
-    assert(isMatch('foo', '*(!(f))'));
-    assert(isMatch('foo', '+(!(f))'));
-    assert(isMatch('foo.js.js', '*.!(js)'));
-    assert(isMatch('foobar', '!(foo)'));
-    assert(isMatch('foofoofo', '@(foo|f|fo)*(f|of+(o))'));
-    assert(isMatch('fooofoofofooo', '*(f*(o))'));
-    assert(isMatch('foooofo', '*(f*(o))'));
-    assert(isMatch('foooofof', '*(f*(o))'));
-    assert(isMatch('foooxfooxfoxfooox', '*(f*(o)x)'));
-    assert(isMatch('foooxfooxfxfooox', '*(f*(o)x)'));
-    assert(isMatch('foot', '@(!(z*)|*x)'));
-    assert(isMatch('foox', '@(!(z*)|*x)'));
-    assert(isMatch('Makefile', '!(*.c|*.h|Makefile.in|config*|README)'));
-    assert(isMatch('ofoofo', '*(of+(o))'));
-    assert(isMatch('ofoofo', '*(of+(o)|f)'));
-    assert(isMatch('ofoooxoofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxoofoooxoofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxoofoooxoofxoo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofoooxoofxoofoooxoofxooofxofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('ofxoofxo', '*(*(of*(o)x)o)'));
-    assert(isMatch('oofooofo', '*(of|oof+(o))'));
-    assert(isMatch('ooo', '!(f)'));
-    assert(isMatch('ooo', '*(!(f))'));
-    assert(isMatch('ooo', '+(!(f))'));
-    assert(isMatch('oxfoxoxfox', '*(oxf+(ox))'));
-    assert(isMatch('parse.y', '!(*.c|*.h|Makefile.in|config*|README)'));
-    assert(isMatch('zoox', '@(!(z*)|*x)'));
+  var tests = [
+    ['*(a|b[)', '*(a|b\\[)', false],
+    ['123abc', 'ab*d+(e|f)', false],
+    ['123abc', 'ab?*(e|f)', false],
+    ['a', '!(a)', false],
+    ['a', '(b)', false],
+    ['a', '??', false],
+    ['a', 'a??b', false],
+    ['a', 'b?(a|b)', false],
+    ['a.', '*.+(b|d)', false],
+    ['a.a', '!(*.[a-b]*)', false],
+    ['a.a', '!(*.a|*.b|*.c)', false],
+    ['a.a', '!(*[a-b].[a-b]*)', false],
+    ['a.a', '!*.(a|b)', false],
+    ['a.a', '!*.(a|b)*', false],
+    ['a.a', '*.!(a)', false],
+    ['a.a', '*.+(b|d)', false],
+    ['a.a.a', '!(*.[a-b]*)', false],
+    ['a.a.a', '!(*[a-b].[a-b]*)', false],
+    ['a.a.a', '!*.(a|b)', false],
+    ['a.a.a', '!*.(a|b)*', false],
+    ['a.a.a', '*.+(b|d)', false],
+    ['a.abcd', '!(*.a|*.b|*.c)', false],
+    ['a.abcd', '!(*.a|*.b|*.c)*', false],
+    ['a.abcd', '*.!(a|b|c)', false],
+    ['a.abcd', '*.!(a|b|c)*', false],
+    ['a.b', '!(*.*)', false],
+    ['a.b', '!(*.[a-b]*)', false],
+    ['a.b', '!(*[a-b].[a-b]*)', false],
+    ['a.b', '!*.(a|b)', false],
+    ['a.b', '!*.(a|b)*', false],
+    ['a.bb', '!(*.[a-b]*)', false],
+    ['a.bb', '!(*[a-b].[a-b]*)', false],
+    ['a.bb', '!*.(a|b)', false],
+    ['a.bb', '!*.(a|b)*', false],
+    ['a.ccc', '!*.(a|b)', false],
+    ['a.ccc', '!*.(a|b)*', false],
+    ['a.ccc', '*.+(b|d)', false],
+    ['a.js', '!(*.js)', false],
+    ['a.js', '*.!(js)', false],
+    ['a.js.js', '!(*.js)', false],
+    ['aa', '?', false],
+    ['aa', '@(a)b', false],
+    ['aa', 'a??b', false],
+    ['aab', '?', false],
+    ['aab', '??', false],
+    ['aab', '@(c)b', false],
+    ['ab', 'a!(@(b|B))', false],
+    ['aB', 'a!(@(b|B))', false],
+    ['ab', 'a(*b', false],
+    ['ab', 'ab**(e|f)g', false],
+    ['ab', 'ab*+(e|f)', false],
+    ['ab', 'ab*d+(e|f)', false],
+    ['ab', 'ab?*(e|f)', false],
+    ['abcdef', '(a+|b)+', false],
+    ['abcdef', 'ab**(e|f)g', false],
+    ['abcdef', 'ab?*(e|f)', false],
+    ['abcfef', '(a+|b)+', false],
+    ['abcfef', 'ab**(e|f)g', false],
+    ['abcfef', 'ab*d+(e|f)', false],
+    ['abcfefg', '(a+|b)+', false],
+    ['abcfefg', 'ab*d+(e|f)', false],
+    ['abcfefg', 'ab?*(e|f)', false],
+    ['abd', '(a+|b)+', false],
+    ['abd', 'a!(@(b|B))d', false],
+    ['abd', 'ab*d+(e|f)', false],
+    ['abef', '(a+|b)+', false],
+    ['abef', '*(a+|b)', false],
+    ['abef', 'ab**(e|f)g', false],
+    ['abef', 'ab*d+(e|f)', false],
+    ['acd', '(a+|b)+', false],
+    ['acd', 'ab*d+(e|f)', false],
+    ['acd', 'ab?*(e|f)', false],
+    ['ax', 'a?(b*)', false],
+    ['b/a', '!(b/a)', false],
+    ['baaac', '*(@(a))a@(c)', false],
+    ['bb', 'a?(a|b)', false],
+    ['c', '*(@(a))a@(c)', false],
+    ['c.a', '!(*.[a-b]*)', false],
+    ['c.a', '!*.(a|b)', false],
+    ['c.a', '!*.(a|b)*', false],
+    ['c.a', '*.!(a)', false],
+    ['c.a', '*.+(b|d)', false],
+    ['c.js', '!(*.js)', false],
+    ['c.js', '*.!(js)', false],
+    ['cow', '.!(*.*)', false],
+    ['d.a.d', '!*.(a|b)', false],
+    ['d.a.d', '!*.(a|b)*', false],
+    ['egz', '@(b+(c)d|e+(f)g?|?(h)i@(j|k))', false],
+    ['f', '!(f)', false],
+    ['f', '*(!(f))', false],
+    ['f', '+(!(f))', false],
+    ['f.a', '!(*.a|*.b|*.c)', false],
+    ['f.a', '*.!(a|b|c)', false],
+    ['foo', '!(foo)', false],
+    ['foo', '!(foo)*', false], // bash 4.3 disagrees
+    ['foo', '!(foo)+', false],
+    ['foo', '!(foo)b*', false],
+    ['foo', '*(!(foo))', false],
+    ['foo.js.js', '*.!(js)*', false],
+    ['foo.js.js', '*.!(js)*.!(js)', false],
+    ['foo.js.js', '*.!(js)+', false],
+    ['foob', '!(foo)b*', false],
+    ['foobar', '!(foo)*', false], // bash 4.3 disagrees
+    ['foobar', '!(foo)b*', false],
+    ['foobb', '!(foo)b*', false],
+    ['foooofof', '*(f+(o))', false],
+    ['foooofofx', '*(f*(o))', false],
+    ['foooxfooxofoxfooox', '*(f*(o)x)', false],
+    ['mad.moo.cow', '!(*.*).!(*.*)', false],
+    ['mad.moo.cow', '.!(*.*)', false],
+    ['Makefile.in', '!(*.c|*.h|Makefile.in|config*|README)', false],
+    ['moo', '.!(*.*)', false],
+    ['moo.cow', '!(*.*).!(*.*)', false], // bash 4.3 disagrees
+    ['moo.cow', '.!(*.*)', false],
+    ['mucca.pazza', 'mu!(*(c))?.pa!(*(z))?', false],
+    ['ofooofoofofooo', '*(f*(o))', false],
+    ['ofoooxoofxoofoooxoofxofo', '*(*(of*(o)x)o)', false],
+    ['oxfoxfox', '*(oxf+(ox))', false],
+    ['shell.c', '!(*.c|*.h|Makefile.in|config*|README)', false],
+    ['xfoooofof', '*(f*(o))', false],
+    ['zoot', '@(!(z*)|*x)', false],
+    ['zz', '(a+|b)*', false],
+    ['a', '(a)', true],
+    ['a', '*(a)', true],
+    ['a', '+(a)', true],
+    ['a', '?', true],
+    ['a', '?(a|b)', true],
+    ['a', 'a?(a|b)', true],
+    ['a', 'a?(x)', true],
+    ['a((((b', 'a(*b', true],
+    ['a((b', 'a(*b', true],
+    ['a(b', 'a(*b', true],
+    ['a.', '!(*.a|*.b|*.c)', true],
+    ['a.', '*!(.a|.b|.c)', true],
+    ['a.', '*.!(a)', true],
+    ['a.', '*.!(a|b|c)', true],
+    ['a.a', '(a|d).(a|b)*', true],
+    ['a.a', '*!(.a|.b|.c)', true],
+    ['a.a.a', '*.!(a)', true],
+    ['a.abcd', '*!(*.a|*.b|*.c)*', true],
+    ['a.abcd', '*!(.a|.b|.c)', true],
+    ['a.b', '(a|d).(a|b)*', true],
+    ['a.b', '*!(.a|.b|.c)', true],
+    ['a.b', '*.!(a)', true],
+    ['a.b', '*.+(b|d)', true],
+    ['a.bb', '(a|d).(a|b)*', true],
+    ['a.bb', '*.+(b|d)', true],
+    ['a.c', '*!(.a|.b|.c)', true],
+    ['a.c.d', '!(*.a|*.b|*.c)', true],
+    ['a.c.d', '*!(.a|.b|.c)', true],
+    ['a.c.d', '*.!(a|b|c)', true],
+    ['a.ccc', '!(*.[a-b]*)', true],
+    ['a.ccc', '!(*[a-b].[a-b]*)', true],
+    ['a.js', '*!(.js)', true],
+    ['a.js.js', '*!(.js)', true],
+    ['a.js.js', '*.!(js)', true],
+    ['a.md', '!(*.js)', true],
+    ['a.md', '*!(.js)', true],
+    ['a.md', '*.!(js)', true],
+    ['aa', '!(a)', true],
+    ['aaac', '*(@(a))a@(c)', true],
+    ['aab', 'a??b', true],
+    ['aac', '*(@(a))a@(c)', true],
+    ['ab', '!(*.*)', true],
+    ['ab', '(a+|b)+', true],
+    ['ab', 'ab**(e|f)', true],
+    ['ab]', 'a!(@(b|B))', true],
+    ['abab', 'ab**(e|f)', true],
+    ['abb', '!(*.*)', true],
+    ['abbcd', '@(ab|a*(b))*(c)d', true],
+    ['aBc', 'a!(@(b|B))', true],
+    ['abcd', '?@(a|b)*@(c)d', true],
+    ['abcd', '@(ab|a*@(b))*(c)d', true],
+    ['abcdef', '(a+|b)*', true],
+    ['abcdef', 'ab**(e|f)', true],
+    ['abcdef', 'ab*+(e|f)', true],
+    ['abcdef', 'ab*d+(e|f)', true],
+    ['abcfef', '(a+|b)*', true],
+    ['abcfef', 'ab**(e|f)', true],
+    ['abcfef', 'ab*+(e|f)', true],
+    ['abcfef', 'ab?*(e|f)', true],
+    ['abcfefg', '(a+|b)*', true],
+    ['abcfefg', 'ab**(e|f)', true],
+    ['abd', '(a+|b)*', true],
+    ['abd', 'a!(@(b|B))', true],
+    ['abd', 'ab**(e|f)', true],
+    ['abd', 'ab?*(e|f)', true],
+    ['abef', '(a+|b)*', true],
+    ['abef', 'ab**(e|f)', true],
+    ['abef', 'ab*+(e|f)', true],
+    ['abef', 'ab?*(e|f)', true],
+    ['ac', '*(@(a))a@(c)', true],
+    ['ac', 'a!(@(b|B))', true],
+    ['acd', '(a+|b)*', true],
+    ['acd', '@(ab|a*(b))*(c)d', true],
+    ['acd', 'a!(@(b|B))', true],
+    ['acd', 'a!(@(b|B))d', true],
+    ['ax', '?(a*|b)', true],
+    ['b', '(a+|b)*', true],
+    ['b/b', '!(b/a)', true],
+    ['b/c', '!(b/a)', true],
+    ['ba', 'b?(a|b)', true],
+    ['bar', '!(foo)*', true],
+    ['bar', '!(foo)b*', true],
+    ['baz', '!(foo)*', true],
+    ['baz', '!(foo)b*', true],
+    ['c.a', '!(*[a-b].[a-b]*)', true],
+    ['c.c', '*!(.a|.b|.c)', true],
+    ['c.ccc', '!(*.[a-b]*)', true],
+    ['c.ccc', '!(*[a-b].[a-b]*)', true],
+    ['c.js', '*!(.js)', true],
+    ['d.a.d', '!(*.[a-b]*)', true],
+    ['d.a.d', '!(*[a-b].[a-b]*)', true],
+    ['d.a.d', '*.!(a)', true],
+    ['d.a.d', '*.+(b|d)', true],
+    ['d.d', '!(*.a|*.b|*.c)', true],
+    ['d.d', '*!(.a|.b|.c)', true],
+    ['d.d', '*.!(a|b|c)', true],
+    ['d.js.d', '!(*.js)', true],
+    ['d.js.d', '*!(.js)', true],
+    ['d.js.d', '*.!(js)', true],
+    ['e.e', '!(*.a|*.b|*.c)', true],
+    ['e.e', '*!(.a|.b|.c)', true],
+    ['e.e', '*.!(a|b|c)', true],
+    ['effgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))', true],
+    ['efgz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))', true],
+    ['egz', '@(b+(c)d|e*(f)g?|?(h)i@(j|k))', true],
+    ['egzefffgzbcdij', '*(b+(c)d|e*(f)g?|?(h)i@(j|k))', true],
+    ['f.a', '*!(.a|.b|.c)', true],
+    ['f.f', '!(*.a|*.b|*.c)', true],
+    ['f.f', '*!(.a|.b|.c)', true],
+    ['f.f', '*.!(a|b|c)', true],
+    ['fff', '!(f)', true],
+    ['fff', '*(!(f))', true],
+    ['fff', '+(!(f))', true],
+    ['fffooofoooooffoofffooofff', '*(*(f)*(o))', true],
+    ['ffo', '*(f*(o))', true],
+    ['fofo', '*(f*(o))', true],
+    ['fofoofoofofoo', '*(fo|foo)', true],
+    ['foo', '!(f)', true],
+    ['foo', '!(x)', true],
+    ['foo', '!(x)*', true],
+    ['foo', '*(!(f))', true],
+    ['foo', '+(!(f))', true],
+    ['foo.js.js', '*.!(js)', true],
+    ['foobar', '!(foo)', true],
+    ['foofoofo', '@(foo|f|fo)*(f|of+(o))', true],
+    ['fooofoofofooo', '*(f*(o))', true],
+    ['foooofo', '*(f*(o))', true],
+    ['foooofof', '*(f*(o))', true],
+    ['foooxfooxfoxfooox', '*(f*(o)x)', true],
+    ['foooxfooxfxfooox', '*(f*(o)x)', true],
+    ['foot', '@(!(z*)|*x)', true],
+    ['foox', '@(!(z*)|*x)', true],
+    ['Makefile', '!(*.c|*.h|Makefile.in|config*|README)', true],
+    ['ofoofo', '*(of+(o))', true],
+    ['ofoofo', '*(of+(o)|f)', true],
+    ['ofoooxoofxo', '*(*(of*(o)x)o)', true],
+    ['ofoooxoofxoofoooxoofxo', '*(*(of*(o)x)o)', true],
+    ['ofoooxoofxoofoooxoofxoo', '*(*(of*(o)x)o)', true],
+    ['ofoooxoofxoofoooxoofxooofxofxo', '*(*(of*(o)x)o)', true],
+    ['ofxoofxo', '*(*(of*(o)x)o)', true],
+    ['oofooofo', '*(of|oof+(o))', true],
+    ['ooo', '!(f)', true],
+    ['ooo', '*(!(f))', true],
+    ['ooo', '+(!(f))', true],
+    ['oxfoxoxfox', '*(oxf+(ox))', true],
+    ['parse.y', '!(*.c|*.h|Makefile.in|config*|README)', true],
+    ['zoox', '@(!(z*)|*x)', true]
+  ];
+
+  tests.forEach(function(test) {
+    var fixture = test[0];
+    var pattern = test[1];
+    var expected = test[2];
+    var msg = 'should ' + (expected ? '' : 'not ') + 'match ' + pattern;
+
+    it(msg, function() {
+      assert.equal(match.isMatch(fixture, pattern), expected, msg);
+    });
   });
 });

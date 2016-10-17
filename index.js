@@ -15,8 +15,9 @@ var toRegex = require('to-regex');
 var compilers = require('./lib/compilers');
 var parsers = require('./lib/parsers');
 var Extglob = require('./lib/extglob');
+var cache = require('./lib/cache');
 var utils = require('./lib/utils');
-var cache = {};
+var MAX_LENGTH = 1024 * 64;
 
 /**
  * Convert the given `extglob` pattern into a regex-compatible string. Returns
@@ -56,6 +57,10 @@ function extglob(pattern, options) {
  */
 
 extglob.match = function(list, pattern, options) {
+  if (typeof pattern !== 'string') {
+    throw new TypeError('expected pattern to be a string');
+  }
+
   var isMatch = extglob.matcher(pattern, options);
 
   list = [].concat(list);
@@ -102,24 +107,15 @@ extglob.match = function(list, pattern, options) {
  */
 
 extglob.isMatch = function(str, pattern, options) {
-  if (typeof str !== 'string') {
-    throw new TypeError('expected a string');
-  }
   if (typeof pattern !== 'string') {
     throw new TypeError('expected pattern to be a string');
   }
 
-  var key = utils.createKey('isMatch:' + pattern, options);
-  var matcher;
-
-  options = options || {};
-  if (!options || (options.cache !== false && cache.hasOwnProperty(key))) {
-    matcher = cache[key];
-  } else {
-    matcher = cache[key] = extglob.matcher(pattern, options);
+  if (typeof str !== 'string') {
+    throw new TypeError('expected a string');
   }
 
-  return matcher(str);
+  return extglob.matcher(pattern, options)(str);
 };
 
 /**
@@ -146,10 +142,14 @@ extglob.matcher = function(pattern, options) {
     throw new TypeError('expected pattern to be a string');
   }
 
-  var re = extglob.makeRe(pattern, options);
-  return function(str) {
-    return re.test(str);
-  };
+  function matcher() {
+    var re = extglob.makeRe(pattern, options);
+    return function(str) {
+      return re.test(str);
+    };
+  }
+
+  return memoize('matcher', pattern, options, matcher);
 };
 
 /**
@@ -172,19 +172,13 @@ extglob.create = function(pattern, options) {
     throw new TypeError('expected pattern to be a string');
   }
 
-  var key = utils.createKey('create:' + pattern, options);
-  options = options || {};
-  if (!options || (options.cache !== false && cache.hasOwnProperty(key))) {
-    return cache[key];
+  function create() {
+    var ext = new Extglob(options);
+    var ast = ext.parse(pattern, options);
+    return ext.compile(ast, options);
   }
 
-  var ext = new Extglob(options);
-  var ast = ext.parse(pattern, options);
-  var res = ext.compile(ast, options);
-  if (!options || options.cache !== false) {
-    cache[key] = res;
-  }
-  return res;
+  return memoize('create', pattern, options, create);
 };
 
 /**
@@ -203,30 +197,54 @@ extglob.create = function(pattern, options) {
  */
 
 extglob.makeRe = function(pattern, options) {
+  if (pattern instanceof RegExp) {
+    return pattern;
+  }
+
   if (typeof pattern !== 'string') {
     throw new TypeError('expected pattern to be a string');
   }
 
-  var key = utils.createKey('makeRe:' + pattern, options);
-  var regex;
-
-  options = options || {};
-  if (!options || (options.cache !== false && cache.hasOwnProperty(key))) {
-    return cache[key];
+  if (pattern.length > MAX_LENGTH) {
+    throw new Error('expected pattern to be less than ' + MAX_LENGTH + ' characters');
   }
 
-  var opts = extend({strictErrors: false}, options);
-  if (opts.strictErrors === true) {
-    opts.strict = true;
+  function makeRe() {
+    var opts = extend({strictErrors: false}, options);
+    if (opts.strictErrors === true) {
+      opts.strict = true;
+    }
+    var res = extglob.create(pattern, opts);
+    return toRegex(res.output, opts);
   }
 
-  var res = extglob.create(pattern, opts);
-  regex = toRegex(res.output, opts);
-  if (opts.cache !== false) {
-    cache[key] = regex;
+  var regex = memoize('makeRe', pattern, options, makeRe);
+  if (regex.source.length > MAX_LENGTH) {
+    throw new SyntaxError('potentially malicious regex detected');
   }
+
   return regex;
 };
+
+/**
+ * Memoize a generated regex or function
+ */
+
+function memoize(type, pattern, options, fn) {
+  var key = utils.createKey(type + pattern, options);
+
+  if (cache.has(type, key)) {
+    return cache.get(type, key);
+  }
+
+  var val = fn(pattern, options);
+  if (options && options.cache === false) {
+    return val;
+  }
+
+  cache.set(type, key, val);
+  return val;
+}
 
 /**
  * Expose `Extglob` constructor, parsers and compilers
