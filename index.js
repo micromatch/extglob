@@ -62,7 +62,6 @@ extglob.match = function(list, pattern, options) {
   }
 
   var isMatch = extglob.matcher(pattern, options);
-
   list = [].concat(list);
   var len = list.length;
   var idx = -1;
@@ -115,8 +114,49 @@ extglob.isMatch = function(str, pattern, options) {
     throw new TypeError('expected a string');
   }
 
+  if (pattern === str) {
+    return true;
+  }
+
+  if (pattern === '' || pattern === ' ' || pattern === '.' || pattern === '/') {
+    return pattern === str;
+  }
+
   var isMatch = memoize('isMatch', pattern, options, extglob.matcher);
   return isMatch(str);
+};
+
+/**
+ * Returns true if the given `string` contains the given pattern. Similar to `.isMatch` but
+ * the pattern can match any part of the string.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * console.log(extglob.contains('aa/bb/cc', '*b'));
+ * //=> true
+ * console.log(extglob.contains('aa/bb/cc', '*d'));
+ * //=> false
+ * ```
+ * @param {String} `str` The string to match.
+ * @param {String} `pattern` Glob pattern to use for matching.
+ * @param {Object} `options`
+ * @return {Boolean} Returns true if the patter matches any part of `str`.
+ * @api public
+ */
+
+extglob.contains = function(str, pattern, options) {
+  if (typeof str !== 'string') {
+    throw new TypeError('expected a string');
+  }
+
+  if (pattern === '' || pattern === ' ') {
+    return pattern === str;
+  }
+
+  var opts = extend({}, options, {contains: true});
+  opts.strictClose = false;
+  opts.strictOpen = false;
+  return extglob.isMatch(str, pattern, opts);
 };
 
 /**
@@ -212,9 +252,7 @@ extglob.makeRe = function(pattern, options) {
 
   function makeRe() {
     var opts = extend({strictErrors: false}, options);
-    if (opts.strictErrors === true) {
-      opts.strict = true;
-    }
+    if (opts.strictErrors === true) opts.strict = true;
     var res = extglob.create(pattern, opts);
     return toRegex(res.output, opts);
   }
