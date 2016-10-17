@@ -26,6 +26,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "array-unique": "^0.3.2",
     "debug": "^2.2.0",
     "define-property": "^0.2.5",
     "expand-brackets": "^2.0.1",

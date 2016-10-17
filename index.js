@@ -6,6 +6,7 @@
 
 var debug = require('debug')('extglob');
 var extend = require('extend-shallow');
+var unique = require('array-unique');
 var toRegex = require('to-regex');
 
 /**
@@ -41,6 +42,15 @@ function extglob(pattern, options) {
 }
 
 /**
+ * Cache
+ */
+
+extglob.cache = cache;
+extglob.clearCache = function() {
+  extglob.cache.__data__ = {};
+};
+
+/**
  * Takes an array of strings and an extglob pattern and returns a new
  * array that contains only the strings that match the pattern.
  *
@@ -52,7 +62,7 @@ function extglob(pattern, options) {
  * @param {Array} `list` Array of strings to match
  * @param {String} `pattern` Extglob pattern
  * @param {Object} `options`
- * @return {Array}
+ * @return {Array} Returns an array of matches
  * @api public
  */
 
@@ -61,29 +71,35 @@ extglob.match = function(list, pattern, options) {
     throw new TypeError('expected pattern to be a string');
   }
 
+  list = utils.arrayify(list);
   var isMatch = extglob.matcher(pattern, options);
-  list = [].concat(list);
   var len = list.length;
   var idx = -1;
-  var res = [];
+  var matches = [];
 
   while (++idx < len) {
     var ele = list[idx];
 
     if (isMatch(ele)) {
-      res.push(ele);
+      matches.push(ele);
     }
   }
 
-  if (res.length === 0) {
-    if (options && options.failglob === true) {
+  // if no options were passed, uniquify results and return
+  if (typeof options === 'undefined') {
+    return unique(matches);
+  }
+
+  if (matches.length === 0) {
+    if (options.failglob === true) {
       throw new Error('no matches found for "' + pattern + '"');
     }
-    if (options && (options.nonull === true || options.nullglob === true)) {
+    if (options.nonull === true || options.nullglob === true) {
       return [pattern.split('\\').join('')];
     }
   }
-  return res;
+
+  return options.nodupes !== false ? unique(matches) : matches;
 };
 
 /**
