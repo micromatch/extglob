@@ -16,7 +16,6 @@ var toRegex = require('to-regex');
 var compilers = require('./lib/compilers');
 var parsers = require('./lib/parsers');
 var Extglob = require('./lib/extglob');
-var cache = require('./lib/cache');
 var utils = require('./lib/utils');
 var MAX_LENGTH = 1024 * 64;
 
@@ -45,7 +44,7 @@ function extglob(pattern, options) {
  * Cache
  */
 
-extglob.cache = cache;
+extglob.cache = utils.cache;
 extglob.clearCache = function() {
   extglob.cache.__data__ = {};
 };
@@ -138,7 +137,7 @@ extglob.isMatch = function(str, pattern, options) {
     return pattern === str;
   }
 
-  var isMatch = memoize('isMatch', pattern, options, extglob.matcher);
+  var isMatch = utils.memoize('isMatch', pattern, options, extglob.matcher);
   return isMatch(str);
 };
 
@@ -206,7 +205,7 @@ extglob.matcher = function(pattern, options) {
     };
   }
 
-  return memoize('matcher', pattern, options, matcher);
+  return utils.memoize('matcher', pattern, options, matcher);
 };
 
 /**
@@ -235,7 +234,7 @@ extglob.create = function(pattern, options) {
     return ext.compile(ast, options);
   }
 
-  return memoize('create', pattern, options, create);
+  return utils.memoize('create', pattern, options, create);
 };
 
 /**
@@ -273,33 +272,13 @@ extglob.makeRe = function(pattern, options) {
     return toRegex(res.output, opts);
   }
 
-  var regex = memoize('makeRe', pattern, options, makeRe);
+  var regex = utils.memoize('makeRe', pattern, options, makeRe);
   if (regex.source.length > MAX_LENGTH) {
     throw new SyntaxError('potentially malicious regex detected');
   }
 
   return regex;
 };
-
-/**
- * Memoize a generated regex or function
- */
-
-function memoize(type, pattern, options, fn) {
-  var key = utils.createKey(type + pattern, options);
-
-  if (cache.has(type, key)) {
-    return cache.get(type, key);
-  }
-
-  var val = fn(pattern, options);
-  if (options && options.cache === false) {
-    return val;
-  }
-
-  cache.set(type, key, val);
-  return val;
-}
 
 /**
  * Expose `Extglob` constructor, parsers and compilers
