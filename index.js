@@ -164,7 +164,7 @@ extglob.contains = function(str, pattern, options) {
     throw new TypeError('expected a string');
   }
 
-  if (pattern === '' || pattern === ' ') {
+  if (pattern === '' || pattern === ' ' || pattern === '.') {
     return pattern === str;
   }
 
