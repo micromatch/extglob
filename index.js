@@ -133,7 +133,7 @@ extglob.isMatch = function(str, pattern, options) {
     return true;
   }
 
-  if (pattern === '' || pattern === ' ' || pattern === '.' || pattern === '/') {
+  if (pattern === '' || pattern === ' ' || pattern === '.') {
     return pattern === str;
   }
 
