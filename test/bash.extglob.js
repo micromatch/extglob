@@ -38,7 +38,8 @@ describe('bash tests derived from the pd-ksh test suite:', function() {
     [ 'para39', 'para!(*.[0-9])', true ],
     '',
     'tests derived from those  rosenblatt\'s korn shell book',
-    [ '""', '*(0|1|3|5|7|9)', false ], // Bash 4.3 disagrees
+    [ '', '*(0|1|3|5|7|9)', true ],
+    [ '""', '*(0|1|3|5|7|9)', false ],
     [ '137577991', '*(0|1|3|5|7|9)', true ],
     [ '2468', '*(0|1|3|5|7|9)', false ],
     [ 'file.c', '*.c?(c)', true ],
@@ -48,29 +49,29 @@ describe('bash tests derived from the pd-ksh test suite:', function() {
     [ 'parse.y', '!(*.c|*.h|Makefile.in|config*|README)', true ],
     [ 'shell.c', '!(*.c|*.h|Makefile.in|config*|README)', false ],
     [ 'Makefile', '!(*.c|*.h|Makefile.in|config*|README)', true ],
-    [ '"VMS.FILE;1"', '*\\;[1-9]*([0-9])', false ], // Bash 4.3 disagrees
+    [ '"VMS.FILE;1"', '*\\;[1-9]*([0-9])', false ],
     [ '"VMS.FILE;0"', '*\\;[1-9]*([0-9])', false ],
     [ '"VMS.FILE;"', '*\\;[1-9]*([0-9])', false ],
-    [ '"VMS.FILE;139"', '*\\;[1-9]*([0-9])', false ], // Bash 4.3 disagrees
+    [ '"VMS.FILE;139"', '*\\;[1-9]*([0-9])', false ],
     [ '"VMS.FILE;139"', '*;[1-9]*([0-9])', false ],
-    [ '"VMS.FILE;139"', '*;[1-9]*([0-9])*', true ], // Bash 4.3 disagrees
-    [ '"VMS.FILE;139"', '*;[1-9]**([0-9])*', true ], // Bash 4.3 disagrees
+    [ '"VMS.FILE;139"', '*;[1-9]*([0-9])*', true ],
+    [ '"VMS.FILE;139"', '*;[1-9]**([0-9])*', true ],
     [ '"VMS.FILE;1N"', '*;[1-9]*([0-9])', false ],
     '',
-    ['abcx', '!([*)*', true], // Bash 4.3 disagrees
+    ['abcx', '!([*)*', true],
     ['abcx', '!(\\[*)*', true],
-    ['abcz', '!([*)*', true], // Bash 4.3 disagrees
+    ['abcz', '!([*)*', true],
     ['abcz', '!(\\[*)*', true],
-    ['bbc', '!([*)*', true], // Bash 4.3 disagrees
+    ['bbc', '!([*)*', true],
     ['bbc', '!(\\[*)*', true],
-    ['abcx', '+(a|b[)*', true], // Bash 4.3 disagrees
+    ['abcx', '+(a|b[)*', true],
     ['abcx', '+(a|b\\[)*', true],
-    ['abcz', '+(a|b[)*', true], // Bash 4.3 disagrees
+    ['abcz', '+(a|b[)*', true],
     ['abcz', '+(a|b\\[)*', true],
     ['bbc', '+(a|b[)*', false],
     ['abcx', '[a*(]*z', false],
     ['abcx', '[a*\\(]*z', false],
-    ['abcz', '[a*(]*z', true], // Bash 4.3 disagrees
+    ['abcz', '[a*(]*z', true],
     ['abcz', '[a*\\(]*z', true],
     ['bbc', '[a*(]*z', false],
     ['bbc', '[a*\\(]*z', false],
@@ -96,7 +97,7 @@ describe('bash tests derived from the pd-ksh test suite:', function() {
     '',
     'simple kleene star tests',
     ['foo', '*(a|b[)', false],
-    ['foo', '*(a|b[)|f*', true], // Bash 4.3 disagrees
+    ['foo', '*(a|b[)|f*', true],
     'this doesn\'t work right yet (from bash notes, it does work in extglob)',
     ['*(a|b[)', '*(a|b[)', true],
     '',

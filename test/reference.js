@@ -16,7 +16,6 @@ describe('running extglob against minimatch tests', function() {
 
         it('should' + exp + ' match "' + pattern + '"', function() {
           var actual = matcher.isMatch(fixture, pattern);
-          // console.log(matcher.makeRe(pattern))
           if (actual === null) return;
           assert.equal(actual, expected, pattern);
         });
