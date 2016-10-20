@@ -1,22 +1,22 @@
 {
   "name": "extglob",
-  "description": "Convert extended globs to regex-compatible strings. Add (almost) the expressive power of regular expressions to glob patterns.",
+  "description": "Extended glob support for JavaScript. Adds (almost) the expressive power of regular expressions to glob patterns.",
   "version": "0.3.2",
   "homepage": "https://github.com/jonschlinkert/extglob",
-  "author": {
-    "name": "Jon Schlinkert",
-    "url": "https://github.com/jonschlinkert"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jonschlinkert/extglob.git"
-  },
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "contributors": [
+    "Isiah Meadows <me@isiahmeadows.com> (https://www.isiahmeadows.com)",
+    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)",
+    "Shinnosuke Watanabe <snnskwtnb@gmail.com> (https://shinnn.github.io)"
+  ],
+  "repository": "jonschlinkert/extglob",
   "bugs": {
     "url": "https://github.com/jonschlinkert/extglob/issues"
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "lib"
   ],
   "main": "index.js",
   "engines": {
@@ -25,34 +25,75 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {},
+  "dependencies": {
+    "array-unique": "^0.3.2",
+    "debug": "^2.2.0",
+    "define-property": "^0.2.5",
+    "expand-brackets": "^2.0.1",
+    "extend-shallow": "^2.0.1",
+    "fragment-cache": "^0.2.0",
+    "regex-not": "^1.0.0",
+    "snapdragon": "^0.8.1",
+    "to-regex": "^2.1.0"
+  },
   "devDependencies": {
-    "ansi-green": "^0.1.1",
-    "micromatch": "^2.1.6",
-    "minimatch": "^2.0.1",
-    "minimist": "^1.1.0",
-    "mocha": "*",
-    "should": "*",
-    "success-symbol": "^0.1.0"
+    "bash-match": "^0.1.1",
+    "for-own": "^0.1.4",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^3.0.1",
+    "gulp-format-md": "^0.1.11",
+    "gulp-istanbul": "^1.1.1",
+    "gulp-mocha": "^3.0.1",
+    "gulp-unused": "^0.2.0",
+    "helper-changelog": "^0.3.0",
+    "is-windows": "^0.2.0",
+    "micromatch": "^2.3.11",
+    "minimatch": "^3.0.3",
+    "mocha": "^3.1.2",
+    "multimatch": "^2.1.0",
+    "yargs-parser": "^4.0.2"
   },
   "keywords": [
     "bash",
     "extended",
     "extglob",
     "glob",
+    "globbing",
     "ksh",
     "match",
+    "pattern",
+    "patterns",
+    "regex",
+    "test",
     "wildcard"
   ],
   "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
     "related": {
       "list": [
-        "micromatch",
-        "expand-brackets",
         "braces",
+        "expand-brackets",
+        "expand-range",
         "fill-range",
-        "expand-range"
+        "micromatch"
       ]
-    }
+    },
+    "helpers": [
+      "helper-changelog"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
+    },
+    "reflinks": [
+      "verb",
+      "verb-generate-readme"
+    ]
   }
 }
