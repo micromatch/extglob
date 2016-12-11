@@ -26,7 +26,7 @@ describe('bash extglob1 tests', function() {
     var fixture = test[0];
     var pattern = test[1];
     var expected = test[2];
-    var msg = 'should ' + (expected ? '' : 'not ') + 'match ' + pattern;
+    var msg = '"' + fixture + '" should ' + (expected ? '' : 'not ') + 'match ' + pattern;
 
     it((startLine + i) + ' ' + msg, function() {
       assert.equal(match.isMatch(fixture, pattern), expected, msg);

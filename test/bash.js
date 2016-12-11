@@ -15,6 +15,7 @@ describe('running extglob against minimatch tests', function() {
     ['a', 'a??b', false],
     ['a', 'b?(a|b)', false],
     ['a.', '*.+(b|d)', false],
+    ['a', '!(*.a|*.b|*.c)', true],
     ['a.a', '!(*.[a-b]*)', false],
     ['a.a', '!(*.a|*.b|*.c)', false],
     ['a.a', '!(*[a-b].[a-b]*)', false],
@@ -281,7 +282,7 @@ describe('running extglob against minimatch tests', function() {
     var fixture = test[0];
     var pattern = test[1];
     var expected = test[2];
-    var msg = 'should ' + (expected ? '' : 'not ') + 'match ' + pattern;
+    var msg = '"' + fixture + '" should ' + (expected ? '' : 'not ') + 'match ' + pattern;
 
     it(msg, function() {
       assert.equal(match.isMatch(fixture, pattern), expected, msg);

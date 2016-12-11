@@ -38,6 +38,12 @@ describe('extglobs', function() {
     match(['c/z/v'], 'c/z/v', ['c/z/v']);
   });
 
+  it('should work with file extensions', function() {
+    match(['.md', 'a.js', 'a.md', 'b.md', 'c.md'], '@(a|b).md', ['a.md', 'b.md']);
+    match(['.md', 'a.js', 'a.md', 'aa.md', 'ab.md', 'b.md', 'bb.md', 'c.md'], '+(a|b).md', ['a.md', 'aa.md', 'ab.md', 'b.md', 'bb.md']);
+    match(['.md', 'a.js', 'a.md', 'aa.md', 'ab.md', 'b.md', 'bb.md', 'c.md'], '*(a|b).md', ['.md', 'a.md', 'aa.md', 'ab.md', 'b.md', 'bb.md']);
+  });
+
   it('should support star (`*`) extglobs', function() {
     match(['cz', 'abz', 'az'], 'a*(z)', ['az']);
     match(['cz', 'abz', 'az'], 'a**(z)', ['az', 'abz']);
@@ -68,8 +74,18 @@ describe('extglobs', function() {
 
     var f2 = ['a', 'b', 'aa', 'ab', 'bb', 'ac', 'aaa', 'aab', 'abb', 'ccc'];
     match(f2, '!(a)', ['aa', 'aaa', 'aab', 'ab', 'abb', 'ac', 'b', 'bb', 'ccc']);
+    match(f2, '!(a*)', ['b', 'bb', 'ccc']);
+    match(f2, '!(*a*)', ['b', 'bb', 'ccc']);
+    match(f2, '!(*a)', ['aab', 'ab', 'abb', 'ac', 'b', 'bb', 'ccc']);
     match(f2, '!(a)*', ['b', 'bb', 'ccc']);
+    match(f2, '!(*a)*', ['b', 'bb', 'ccc']);
+    match(f2, '@(!(a){1,2})*', ['b', 'bb', 'ccc']);
     match(f2, 'a!(b)*', ['a', 'aa', 'aaa', 'aab', 'ac']);
+    match(['aajs', 'bajs', 'aamd', 'abmd'], 'a!(a)md', ['abmd']);
+    match(['aajs', 'bajs', 'aamd', 'abmd'], 'a!(.)md', ['aamd', 'abmd']);
+    match(['a.js', 'a.md', 'b.md', 'c.md'], '!(a|b).md', ['c.md']);
+    match(['a.js', 'a.md', 'b.md', 'c.md'], '!(a|c).md', ['b.md']);
+    match(['a.js', 'a.md', 'b.md', 'b.js', 'c.md'], '!(a|c).@(md|js)', ['b.md', 'b.js']);
   });
 
   it('should support plus (`+`) extglobs', function() {

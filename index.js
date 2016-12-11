@@ -4,7 +4,6 @@
  * Module dependencies
  */
 
-var debug = require('debug')('extglob');
 var extend = require('extend-shallow');
 var unique = require('array-unique');
 var toRegex = require('to-regex');
@@ -35,9 +34,7 @@ var MAX_LENGTH = 1024 * 64;
  */
 
 function extglob(pattern, options) {
-  debug('initializing from <%s>', __filename);
-  var res = extglob.create(pattern, options);
-  return res.output;
+  return extglob.create(pattern, options).output;
 }
 
 /**
