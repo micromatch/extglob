@@ -1,7 +1,7 @@
 {
   "name": "extglob",
   "description": "Extended glob support for JavaScript. Adds (almost) the expressive power of regular expressions to glob patterns.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "homepage": "https://github.com/jonschlinkert/extglob",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "array-unique": "^0.3.2",
-    "debug": "^2.2.0",
     "define-property": "^0.2.5",
     "expand-brackets": "^2.0.1",
     "extend-shallow": "^2.0.1",
