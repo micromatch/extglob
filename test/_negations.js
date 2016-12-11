@@ -34,6 +34,9 @@ module.exports = {
   },
 
   'foo-integration-test.js': {
+    '@(foo-integration-test.js)': true,
+    '@(*-integration-test.js)': true,
+    '@(*-integration-test).js': true,
     'foo-integration-test.js': true,
     '!(*-integration-test.js)': false
   },
@@ -47,21 +50,27 @@ module.exports = {
   },
 
   'asd.jss.xyz': {
-    '*.!(js).!(xy)': true
+    '*.!(js)*.!(xy)': false,
+    '*.!(js)*.!(xy)*': false,
+    '*.!(js).!(xy)': false,
   },
 
   'asd.jss.xy': {
-    '*.!(js).!(xy)': false
+    '*.!(js)*.!(xy)': false,
+    '*.!(js)*.!(xy)*': false,
+    '*.!(js).!(xy)': false,
+    '*.!(js).!(xy)*': false
   },
 
   'asd.js.xyz': {
-    '*.!(js)*.!(xyz)*': false,
-    '*.!(js)*.!(xyz)': false,
-    '*.!(js).!(xyz)': false,
-    '*.!(js)*.!(xy)*': false,
     '*.!(js)*.!(xy)': false,
+    '*.!(js)*.!(xy)*': false,
+    '*.!(js)*.!(xyz)': false,
+    '*.!(js)*.!(xyz)*': false,
+    '*.!(js).!(xy)': false,
     '*.!(js).!(xy)*': false,
-    '*.!(js).!(xy)': true
+    '*.!(js).!(xyz)': false,
+    '*.!(js).!(xyz)*': false
   },
 
   'asd.js.xy': {
@@ -94,7 +103,7 @@ module.exports = {
     '!(*(.js.js))': true,
     '*.!(js)': true,
     '*.!(js)*': false,     // Bash 4.3 disagrees!
-    '*.!(js)*.js': false  // Bash 4.3 disagrees!
+    '*.!(js)*.js': false   // Bash 4.3 disagrees!
   },
 
   'a/foo.js.js': {
