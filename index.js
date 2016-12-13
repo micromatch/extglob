@@ -38,15 +38,6 @@ function extglob(pattern, options) {
 }
 
 /**
- * Cache
- */
-
-extglob.cache = utils.cache;
-extglob.clearCache = function() {
-  extglob.cache.__data__ = {};
-};
-
-/**
  * Takes an array of strings and an extglob pattern and returns a new
  * array that contains only the strings that match the pattern.
  *
@@ -312,6 +303,15 @@ extglob.makeRe = function(pattern, options) {
   }
 
   return regex;
+};
+
+/**
+ * Cache
+ */
+
+extglob.cache = utils.cache;
+extglob.clearCache = function() {
+  extglob.cache.__data__ = {};
 };
 
 /**
