@@ -235,6 +235,43 @@ extglob.create = function(pattern, options) {
 };
 
 /**
+ * Returns an array of matches captured by `pattern` in `string, or `null` if the pattern did not match.
+ *
+ * ```js
+ * var extglob = require('extglob');
+ * extglob.capture(pattern, string[, options]);
+ *
+ * console.log(extglob.capture('test/*.js', 'test/foo.js));
+ * //=> ['foo']
+ * console.log(extglob.capture('test/*.js', 'foo/bar.css'));
+ * //=> null
+ * ```
+ * @param {String} `pattern` Glob pattern to use for matching.
+ * @param {String} `string` String to match
+ * @param {Object} `options` See available [options](#options) for changing how matches are performed
+ * @return {Boolean} Returns an array of captures if the string matches the glob pattern, otherwise `null`.
+ * @api public
+ */
+
+extglob.capture = function(pattern, str, options) {
+  var re = extglob.makeRe(pattern, extend({capture: true}, options));
+
+  function match() {
+    return function(string) {
+      var match = re.exec(string);
+      if (!match) {
+        return null;
+      }
+
+      return match.slice(1);
+    };
+  }
+
+  var capture = utils.memoize('capture', pattern, options, match);
+  return capture(str);
+};
+
+/**
  * Create a regular expression from the given `pattern` and `options`.
  *
  * ```js
