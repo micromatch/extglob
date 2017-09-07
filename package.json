@@ -5,9 +5,11 @@
   "homepage": "https://github.com/micromatch/extglob",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
-    "Isiah Meadows <me@isiahmeadows.com> (https://www.isiahmeadows.com)",
-    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)",
-    "Shinnosuke Watanabe <snnskwtnb@gmail.com> (https://shinnn.github.io)"
+    "Brian Woodward (https://twitter.com/doowb)",
+    "Isiah Meadows (https://www.isiahmeadows.com)",
+    "Jon Schlinkert (http://twitter.com/jonschlinkert)",
+    "Matt Bierner (http://mattbierner.com)",
+    "Shinnosuke Watanabe (https://shinnn.github.io)"
   ],
   "repository": "micromatch/extglob",
   "bugs": {
