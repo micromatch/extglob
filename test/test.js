@@ -53,6 +53,7 @@ describe('extglobs', function() {
   });
 
   it('should support negation (`!`) extglobs', function() {
+    match(['moo.cow'], '!(!(moo)).!(!(cow))', ['moo.cow']);
     match(['c/z/v', 'c/a/v'], 'c/!(z)/v', ['c/a/v']);
     match(['c/z/v', 'c/a/v'], 'c/!(z)/v', ['c/a/v']);
     match(['cz', 'abz', 'az'], 'a!(z)', ['abz']);
@@ -72,6 +73,10 @@ describe('extglobs', function() {
     match(f1, '!((?:b/a))', ['a/a', 'a/b', 'a/c', 'b/b', 'b/c']);
     match(f1, '!(b/(a))', ['a/a', 'a/b', 'a/c', 'b/b', 'b/c']);
 
+    match(['b', 'b  ', 'b ', 'c  '], '@(!(a) {1,2})*', ['b  ', 'b ', 'c  ']);
+    match(['b', 'b ', 'bb', 'ccc'], '@(!(a) {1,2})*', ['b ']);
+    match(['b', 'a ', 'b ', 'bb', 'ccc'], '@(!(a){1,2} )*', ['b ']);
+
     var f2 = ['a', 'b', 'aa', 'ab', 'bb', 'ac', 'aaa', 'aab', 'abb', 'ccc'];
     match(f2, '!(a)', ['aa', 'aaa', 'aab', 'ab', 'abb', 'ac', 'b', 'bb', 'ccc']);
     match(f2, '!(a*)', ['b', 'bb', 'ccc']);
@@ -79,7 +84,6 @@ describe('extglobs', function() {
     match(f2, '!(*a)', ['aab', 'ab', 'abb', 'ac', 'b', 'bb', 'ccc']);
     match(f2, '!(a)*', ['b', 'bb', 'ccc']);
     match(f2, '!(*a)*', ['b', 'bb', 'ccc']);
-    match(f2, '@(!(a){1,2})*', ['b', 'bb', 'ccc']);
     match(f2, 'a!(b)*', ['a', 'aa', 'aaa', 'aab', 'ac']);
     match(['aajs', 'bajs', 'aamd', 'abmd'], 'a!(a)md', ['abmd']);
     match(['aajs', 'bajs', 'aamd', 'abmd'], 'a!(.)md', ['aamd', 'abmd']);
