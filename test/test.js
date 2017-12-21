@@ -5,7 +5,8 @@ var match = require('./support/match');
 var extglob = require('..');
 
 /**
- * These tests were converted directly from bash 4.3 and 4.4 unit tests.
+ * Most of these tests were converted directly from
+ * bash 4.3 and 4.4 unit tests.
  */
 
 describe('extglobs', function() {
@@ -13,7 +14,7 @@ describe('extglobs', function() {
     assert.equal(typeof extglob, 'function');
   });
 
-  it.skip('failing unit test from bash', function() {
+  it.only('failing unit tests from bash', function() {
     match(['moo.cow'], '!(*.*).!(*.*)', ['moo.cow']);
     match(['foo.js.js'], '*.!(js)*', ['foo.js.js']);
   });
