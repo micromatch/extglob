@@ -24,7 +24,7 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4.0.0"
   },
   "scripts": {
     "test": "mocha"
@@ -33,7 +33,6 @@
     "array-unique": "^0.3.2",
     "define-property": "^2.0.2",
     "expand-brackets": "^4.0.0",
-    "extend-shallow": "^3.0.2",
     "fragment-cache": "^0.2.1",
     "regex-not": "^1.0.0",
     "snapdragon": "^0.12.0",

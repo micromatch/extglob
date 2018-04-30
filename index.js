@@ -4,7 +4,6 @@
  * Module dependencies
  */
 
-var extend = require('extend-shallow');
 var unique = require('array-unique');
 var toRegex = require('to-regex');
 
@@ -156,7 +155,7 @@ extglob.contains = function(str, pattern, options) {
     return pattern === str;
   }
 
-  var opts = extend({}, options, {contains: true});
+  var opts = Object.assign({}, options, {contains: true});
   opts.strictClose = false;
   opts.strictOpen = false;
   return extglob.isMatch(str, pattern, opts);
@@ -246,7 +245,7 @@ extglob.create = function(pattern, options) {
  */
 
 extglob.capture = function(pattern, str, options) {
-  var re = extglob.makeRe(pattern, extend({capture: true}, options));
+  var re = extglob.makeRe(pattern, Object.assign({capture: true}, options));
 
   function match() {
     return function(string) {
@@ -292,7 +291,7 @@ extglob.makeRe = function(pattern, options) {
   }
 
   function makeRe() {
-    var opts = extend({strictErrors: false}, options);
+    var opts = Object.assign({strictErrors: false}, options);
     if (opts.strictErrors === true) opts.strict = true;
     var res = extglob.create(pattern, opts);
     return toRegex(res.output, opts);
