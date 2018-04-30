@@ -52,7 +52,7 @@ module.exports = {
   'asd.jss.xyz': {
     '*.!(js)*.!(xy)': false,
     '*.!(js)*.!(xy)*': false,
-    '*.!(js).!(xy)': false,
+    '*.!(js).!(xy)': false
   },
 
   'asd.jss.xy': {
@@ -102,8 +102,8 @@ module.exports = {
     '*.!(js)+': false,
     '!(*(.js.js))': true,
     '*.!(js)': true,
-    '*.!(js)*': false,     // Bash 4.3 disagrees!
-    '*.!(js)*.js': false   // Bash 4.3 disagrees!
+    '*.!(js)*': false, // Bash 4.3 disagrees!
+    '*.!(js)*.js': false // Bash 4.3 disagrees!
   },
 
   'a/foo.js.js': {
