@@ -1,5 +1,13 @@
 ## Changelog
 
+### v3.0.0
+
+**Breaking changes**
+
+- Snapdragon was updated to 0.12. Other packages that integrate `extglob` need to also use snapdragon 0.12.
+- Minimum Node.JS version is now version 4.
+
+
 ### v2.0.0
 
 **Added features**

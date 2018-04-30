@@ -1,29 +1,29 @@
 # negation-nested (49 bytes)
-  extglob x 2,228,255 ops/sec ±0.98% (89 runs sampled)
-  minimatch x 207,875 ops/sec ±0.61% (91 runs sampled)
+  extglob x 1,380,148 ops/sec ±3.35% (62 runs sampled)
+  minimatch x 156,800 ops/sec ±4.13% (76 runs sampled)
 
-  fastest is extglob (by 1072% avg)
+  fastest is extglob (by 880% avg)
 
 # negation-simple (43 bytes)
-  extglob x 2,205,668 ops/sec ±1.00% (91 runs sampled)
-  minimatch x 311,923 ops/sec ±1.25% (91 runs sampled)
+  extglob x 1,821,746 ops/sec ±1.61% (76 runs sampled)
+  minimatch x 365,618 ops/sec ±1.87% (84 runs sampled)
 
-  fastest is extglob (by 707% avg)
+  fastest is extglob (by 498% avg)
 
 # range-false (57 bytes)
-  extglob x 2,263,877 ops/sec ±0.40% (94 runs sampled)
-  minimatch x 271,372 ops/sec ±1.02% (91 runs sampled)
+  extglob x 2,038,592 ops/sec ±3.39% (85 runs sampled)
+  minimatch x 310,897 ops/sec ±12.62% (87 runs sampled)
 
-  fastest is extglob (by 834% avg)
+  fastest is extglob (by 656% avg)
 
 # range-true (56 bytes)
-  extglob x 2,161,891 ops/sec ±0.41% (92 runs sampled)
-  minimatch x 268,265 ops/sec ±1.17% (91 runs sampled)
+  extglob x 2,105,081 ops/sec ±0.69% (91 runs sampled)
+  minimatch x 332,188 ops/sec ±0.45% (91 runs sampled)
 
-  fastest is extglob (by 806% avg)
+  fastest is extglob (by 634% avg)
 
 # star-simple (46 bytes)
-  extglob x 2,211,081 ops/sec ±0.49% (92 runs sampled)
-  minimatch x 343,319 ops/sec ±0.59% (91 runs sampled)
+  extglob x 2,154,184 ops/sec ±0.99% (89 runs sampled)
+  minimatch x 452,812 ops/sec ±0.51% (88 runs sampled)
 
-  fastest is extglob (by 644% avg)
+  fastest is extglob (by 476% avg)
