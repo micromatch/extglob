@@ -4,26 +4,25 @@
  * Module dependencies
  */
 
-var extend = require('extend-shallow');
-var unique = require('array-unique');
-var toRegex = require('to-regex');
+const unique = require('array-unique');
+const toRegex = require('to-regex');
 
 /**
  * Local dependencies
  */
 
-var compilers = require('./lib/compilers');
-var parsers = require('./lib/parsers');
-var Extglob = require('./lib/extglob');
-var utils = require('./lib/utils');
-var MAX_LENGTH = 1024 * 64;
+const compilers = require('./lib/compilers');
+const parsers = require('./lib/parsers');
+const Extglob = require('./lib/extglob');
+const utils = require('./lib/utils');
+const MAX_LENGTH = 1024 * 64;
 
 /**
  * Convert the given `extglob` pattern into a regex-compatible string. Returns
  * an object with the compiled result and the parsed AST.
  *
  * ```js
- * var extglob = require('extglob');
+ * const extglob = require('extglob');
  * console.log(extglob('*.!(*a)'));
  * //=> '(?!\\.)[^/]*?\\.(?!(?!\\.)[^/]*?a\\b).*?'
  * ```
@@ -42,7 +41,7 @@ function extglob(pattern, options) {
  * array that contains only the strings that match the pattern.
  *
  * ```js
- * var extglob = require('extglob');
+ * const extglob = require('extglob');
  * console.log(extglob.match(['a.a', 'a.b', 'a.c'], '*.!(*a)'));
  * //=> ['a.b', 'a.c']
  * ```
@@ -59,13 +58,13 @@ extglob.match = function(list, pattern, options) {
   }
 
   list = utils.arrayify(list);
-  var isMatch = extglob.matcher(pattern, options);
-  var len = list.length;
-  var idx = -1;
-  var matches = [];
+  const isMatch = extglob.matcher(pattern, options);
+  const len = list.length;
+  let idx = -1;
+  const matches = [];
 
   while (++idx < len) {
-    var ele = list[idx];
+    const ele = list[idx];
 
     if (isMatch(ele)) {
       matches.push(ele);
@@ -94,7 +93,7 @@ extglob.match = function(list, pattern, options) {
  * extglob `pattern`.
  *
  * ```js
- * var extglob = require('extglob');
+ * const extglob = require('extglob');
  *
  * console.log(extglob.isMatch('a.a', '*.!(*a)'));
  * //=> false
@@ -125,7 +124,7 @@ extglob.isMatch = function(str, pattern, options) {
     return pattern === str;
   }
 
-  var isMatch = utils.memoize('isMatch', pattern, options, extglob.matcher);
+  const isMatch = utils.memoize('isMatch', pattern, options, extglob.matcher);
   return isMatch(str);
 };
 
@@ -134,7 +133,7 @@ extglob.isMatch = function(str, pattern, options) {
  * the pattern can match any part of the string.
  *
  * ```js
- * var extglob = require('extglob');
+ * const extglob = require('extglob');
  * console.log(extglob.contains('aa/bb/cc', '*b'));
  * //=> true
  * console.log(extglob.contains('aa/bb/cc', '*d'));
@@ -156,7 +155,7 @@ extglob.contains = function(str, pattern, options) {
     return pattern === str;
   }
 
-  var opts = extend({}, options, {contains: true});
+  const opts = Object.assign({}, options, {contains: true});
   opts.strictClose = false;
   opts.strictOpen = false;
   return extglob.isMatch(str, pattern, opts);
@@ -167,8 +166,8 @@ extglob.contains = function(str, pattern, options) {
  * function takes the string to match as its only argument.
  *
  * ```js
- * var extglob = require('extglob');
- * var isMatch = extglob.matcher('*.!(*a)');
+ * const extglob = require('extglob');
+ * const isMatch = extglob.matcher('*.!(*a)');
  *
  * console.log(isMatch('a.a'));
  * //=> false
@@ -187,7 +186,7 @@ extglob.matcher = function(pattern, options) {
   }
 
   function matcher() {
-    var re = extglob.makeRe(pattern, options);
+    const re = extglob.makeRe(pattern, options);
     return function(str) {
       return re.test(str);
     };
@@ -201,7 +200,7 @@ extglob.matcher = function(pattern, options) {
  * an object with the compiled result and the parsed AST.
  *
  * ```js
- * var extglob = require('extglob');
+ * const extglob = require('extglob');
  * console.log(extglob.create('*.!(*a)').output);
  * //=> '(?!\\.)[^/]*?\\.(?!(?!\\.)[^/]*?a\\b).*?'
  * ```
@@ -217,8 +216,8 @@ extglob.create = function(pattern, options) {
   }
 
   function create() {
-    var ext = new Extglob(options);
-    var ast = ext.parse(pattern, options);
+    const ext = new Extglob(options);
+    const ast = ext.parse(pattern, options);
     return ext.compile(ast, options);
   }
 
@@ -230,7 +229,7 @@ extglob.create = function(pattern, options) {
  * if the pattern did not match.
  *
  * ```js
- * var extglob = require('extglob');
+ * const extglob = require('extglob');
  * extglob.capture(pattern, string[, options]);
  *
  * console.log(extglob.capture('test/*.js', 'test/foo.js'));
@@ -246,11 +245,11 @@ extglob.create = function(pattern, options) {
  */
 
 extglob.capture = function(pattern, str, options) {
-  var re = extglob.makeRe(pattern, extend({capture: true}, options));
+  const re = extglob.makeRe(pattern, Object.assign({capture: true}, options));
 
   function match() {
     return function(string) {
-      var match = re.exec(string);
+      const match = re.exec(string);
       if (!match) {
         return null;
       }
@@ -259,7 +258,7 @@ extglob.capture = function(pattern, str, options) {
     };
   }
 
-  var capture = utils.memoize('capture', pattern, options, match);
+  const capture = utils.memoize('capture', pattern, options, match);
   return capture(str);
 };
 
@@ -267,8 +266,8 @@ extglob.capture = function(pattern, str, options) {
  * Create a regular expression from the given `pattern` and `options`.
  *
  * ```js
- * var extglob = require('extglob');
- * var re = extglob.makeRe('*.!(*a)');
+ * const extglob = require('extglob');
+ * const re = extglob.makeRe('*.!(*a)');
  * console.log(re);
  * //=> /^[^\/]*?\.(?![^\/]*?a)[^\/]*?$/
  * ```
@@ -292,13 +291,13 @@ extglob.makeRe = function(pattern, options) {
   }
 
   function makeRe() {
-    var opts = extend({strictErrors: false}, options);
+    const opts = Object.assign({strictErrors: false}, options);
     if (opts.strictErrors === true) opts.strict = true;
-    var res = extglob.create(pattern, opts);
+    const res = extglob.create(pattern, opts);
     return toRegex(res.output, opts);
   }
 
-  var regex = utils.memoize('makeRe', pattern, options, makeRe);
+  const regex = utils.memoize('makeRe', pattern, options, makeRe);
   if (regex.source.length > MAX_LENGTH) {
     throw new SyntaxError('potentially malicious regex detected');
   }

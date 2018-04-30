@@ -8,7 +8,7 @@ var negations = require('./_negations');
 
 describe('running extglob against minimatch tests', function() {
   forOwn(negations, function(val, fixture) {
-    if (fixture !== 'asd.jss.xyz') return
+    if (fixture !== 'asd.jss.xyz') return;
     describe('"' + fixture + '"', function() {
       forOwn(val, function(expected, pattern) {
         var exp = expected === false ? ' not' : '';

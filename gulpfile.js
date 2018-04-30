@@ -1,10 +1,10 @@
 'use strict';
 
-var gulp = require('gulp');
-var mocha = require('gulp-mocha');
-var unused = require('gulp-unused');
-var istanbul = require('gulp-istanbul');
-var eslint = require('gulp-eslint');
+const gulp = require('gulp');
+const mocha = require('gulp-mocha');
+const unused = require('gulp-unused');
+const istanbul = require('gulp-istanbul');
+const eslint = require('gulp-eslint');
 
 gulp.task('coverage', function() {
   return gulp.src(['index.js', 'lib/*.js'])

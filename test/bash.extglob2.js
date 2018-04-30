@@ -58,7 +58,7 @@ describe('bash extglob2 tests', function() {
     [ 'foo', '!(foo)*', false ], // Bash 4.3 disagrees!
     [ 'foobar', '!(foo)', true ],
     [ 'foobar', '!(foo)*', false ], // Bash 4.3 disagrees!
-    [ 'moo.cow', '!(*.*).!(*.*)', false ],  // Bash 4.3 disagrees!
+    [ 'moo.cow', '!(*.*).!(*.*)', false ], // Bash 4.3 disagrees!
     [ 'mad.moo.cow', '!(*.*).!(*.*)', false ],
     [ 'mucca.pazza', 'mu!(*(c))?.pa!(*(z))?', false ],
     [ 'fff', '!(f)', true ],
